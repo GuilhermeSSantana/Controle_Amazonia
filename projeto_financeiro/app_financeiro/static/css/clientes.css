@@ -1,0 +1,396 @@
+/* Página de Clientes */
+
+.clients-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+/* Reaproveita .top-row do dashboard, se tiver, mas garante um mínimo: */
+.clients-page .top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.clients-page .top-row-main h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.clients-page .top-row-main p {
+  margin: 0;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+/* Botões básicos (usando o que já existe em base/layout, mas garantindo estilo) */
+
+.btn {
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  background-color: hsl(var(--secondary, 220 14% 96%));
+  color: hsl(var(--foreground, 224 15% 15%));
+  font-size: 13px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition-smooth, all 0.2s ease);
+}
+
+.btn .icon {
+  font-size: 15px;
+}
+
+.btn-primary {
+  background-color: hsl(var(--primary, 214 84% 56%));
+  color: hsl(var(--primary-foreground, 0 0% 100%));
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.btn-outline-sm {
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  background-color: transparent;
+  color: hsl(var(--foreground, 224 15% 15%));
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* Chips de filtro */
+
+.btn-chip {
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  background-color: hsl(var(--secondary, 220 14% 96%));
+  color: hsl(var(--foreground, 224 15% 15%));
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.btn-chip.is-active {
+  background-color: hsl(var(--primary, 214 84% 56%));
+  color: hsl(var(--primary-foreground, 0 0% 100%));
+  border-color: hsl(var(--primary, 214 84% 56%));
+}
+
+/* Layout filtros + formulário */
+
+.clients-layout {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 900px) {
+  .clients-layout {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.4fr);
+  }
+}
+
+/* Cards */
+
+.card {
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08),
+              0 2px 4px -1px rgba(15,23,42,0.05);
+}
+
+.card-header {
+  padding: 14px 16px 8px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+  margin-top: 2px;
+}
+
+.card-content {
+  padding: 0 16px 16px;
+}
+
+/* Filtros */
+
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filters-search label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+.filters-search-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  background-color: hsl(var(--secondary, 220 14% 96%));
+  padding: 4px 10px;
+}
+
+.filters-search-input .icon {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+.filters-search-input input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.filters-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters-status-label {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+  margin-right: 4px;
+}
+
+/* Formulário de cadastro */
+
+.client-form {
+  display: block;
+}
+
+.form-errors {
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: #b91c1c;
+  padding: 8px 10px;
+  background-color: #fee2e2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 700px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border, 220 14% 90%));
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+  background-color: #f9fafb;
+}
+
+.form-group textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.checkbox-inline {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.form-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Lista de clientes */
+
+.clients-list-section {
+  margin-top: 10px;
+}
+
+.clients-list-header h2 {
+  font-size: 16px;
+  margin: 0 0 2px;
+}
+
+.clients-list-header p {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+  margin: 0 0 10px;
+}
+
+.clients-grid {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 720px) {
+  .clients-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .clients-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.client-card-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid hsl(var(--border, 220 14% 90%));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.client-card-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background-color: hsl(var(--primary-light, 214 84% 92%));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.client-document {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+  margin: 0;
+}
+
+.client-status .status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+  border-radius: 999px;
+}
+
+.status-inactive {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-radius: 999px;
+}
+
+.client-card-body {
+  padding: 10px 16px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.client-info-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+.client-info-row .icon {
+  font-size: 13px;
+}
+
+.client-notes {
+  margin-top: 4px;
+}
+
+.client-notes .notes-label {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground, 220 9% 46%));
+}
+
+.client-notes p {
+  margin: 2px 0 0;
+}
+
+.client-card-footer {
+  padding: 10px 16px 12px;
+  border-top: 1px solid hsl(var(--border, 220 14% 90%));
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Estado vazio */
+
+.clients-empty {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.clients-empty .card-content {
+  padding: 24px 16px;
+}
+
+.clients-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}

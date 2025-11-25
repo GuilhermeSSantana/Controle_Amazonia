@@ -1,0 +1,216 @@
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page animate-fade-in">
+    <!-- Topo / Boas-vindas -->
+    <div class="top-row">
+        <div class="top-row-main">
+            <h1>🏠 Dashboard - Sistema Atualizado</h1>
+            <p>✅ Bem-vindo ao sistema completo da Amazônia Engenharia</p>
+        </div>
+        <div class="top-row-actions">
+            <button class="btn btn-outline">
+                <span class="icon">📅</span>
+                <span>Hoje</span>
+            </button>
+            <button class="btn btn-primary">
+                <span class="icon">➕</span>
+                <span>Nova Cobrança</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Métricas principais -->
+    <div class="grid grid-md-2 grid-lg-4" style="margin-bottom: 18px;">
+        <!-- Total de clientes -->
+        <div class="card metric-card">
+            <div class="metric-header">
+                <div>
+                    <div class="metric-title">Total de Clientes</div>
+                </div>
+                <div class="metric-icon">
+                    <span>👥</span>
+                </div>
+            </div>
+            <div class="metric-value">47</div>
+            <div class="metric-subtitle">&nbsp;</div>
+        </div>
+
+        <!-- Jobs ativos -->
+        <div class="card metric-card">
+            <div class="metric-header">
+                <div>
+                    <div class="metric-title">Jobs Ativos</div>
+                </div>
+                <div class="metric-icon">
+                    <span>💼</span>
+                </div>
+            </div>
+            <div class="metric-value">12</div>
+            <div class="metric-subtitle">Em andamento</div>
+        </div>
+
+        <!-- Faturamento mensal -->
+        <div class="card metric-card success">
+            <div class="metric-header">
+                <div>
+                    <div class="metric-title">Faturamento Mensal</div>
+                </div>
+                <div class="metric-icon">
+                    <span>💰</span>
+                </div>
+            </div>
+            <div class="metric-value">R$ 125.480</div>
+            <div class="metric-subtitle">Receitas do período</div>
+            <div class="metric-trend">▲ Crescimento de 12,5% em relação ao mês anterior</div>
+        </div>
+
+        <!-- Cobranças vencidas -->
+        <div class="card metric-card danger">
+            <div class="metric-header">
+                <div>
+                    <div class="metric-title">Cobranças Vencidas</div>
+                </div>
+                <div class="metric-icon">
+                    <span>⚠️</span>
+                </div>
+            </div>
+            <div class="metric-value">5</div>
+            <div class="metric-subtitle">Precisam de atenção</div>
+        </div>
+    </div>
+
+    <!-- Resumo semanal + Cobranças recentes -->
+    <div class="grid grid-md-2" style="margin-bottom: 18px;">
+        <!-- Resumo semanal -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="icon">📈</span>
+                    <span>Resumo Semanal</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="metric-row" style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span class="card-subtitle">Vencem esta semana</span>
+                    <span class="metric-value" style="font-size:16px;">8</span>
+                </div>
+                <div class="metric-row" style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span class="card-subtitle">Vencidas</span>
+                    <span class="metric-value" style="font-size:16px;color:#fecaca;">5</span>
+                </div>
+                <div class="metric-row" style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                    <span class="card-subtitle">Em dia</span>
+                    <span class="metric-value" style="font-size:16px;color:#4ade80;">23</span>
+                </div>
+
+                <div class="section-divider">
+                    <button class="btn btn-outline" style="width:100%;justify-content:center;">
+                        Ver Relatório Completo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cobranças recentes -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>Cobranças Recentes</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="invoice-list">
+                    <!-- 1 -->
+                    <div class="invoice-item">
+                        <div class="invoice-item-main">
+                            <p class="invoice-client">Construtora Silva</p>
+                            <p class="invoice-date">Venc: 2024-01-15</p>
+                        </div>
+                        <div>
+                            <p class="invoice-value">R$ 15.000</p>
+                            <span class="status-badge status-overdue">Vencida</span>
+                        </div>
+                    </div>
+                    <!-- 2 -->
+                    <div class="invoice-item">
+                        <div class="invoice-item-main">
+                            <p class="invoice-client">Engenharia Santos</p>
+                            <p class="invoice-date">Venc: 2024-01-18</p>
+                        </div>
+                        <div>
+                            <p class="invoice-value">R$ 8.500</p>
+                            <span class="status-badge status-pending">Pendente</span>
+                        </div>
+                    </div>
+                    <!-- 3 -->
+                    <div class="invoice-item">
+                        <div class="invoice-item-main">
+                            <p class="invoice-client">Projeto Amazonas</p>
+                            <p class="invoice-date">Venc: 2024-01-20</p>
+                        </div>
+                        <div>
+                            <p class="invoice-value">R$ 22.000</p>
+                            <span class="status-badge status-pending">Pendente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider">
+                    <button class="btn btn-outline" style="width:100%;justify-content:center;">
+                        Ver Todas as Cobranças
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>Ações Rápidas</span>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="quick-actions-grid">
+                <button class="btn quick-action-btn">
+                    <span class="quick-action-icon">👥</span>
+                    <div class="quick-action-text">
+                        <p class="quick-action-title">Novo Cliente</p>
+                        <p class="quick-action-sub">Cadastrar cliente</p>
+                    </div>
+                </button>
+                <button class="btn quick-action-btn">
+                    <span class="quick-action-icon">💼</span>
+                    <div class="quick-action-text">
+                        <p class="quick-action-title">Novo Job</p>
+                        <p class="quick-action-sub">Criar serviço</p>
+                    </div>
+                </button>
+                <button class="btn quick-action-btn">
+                    <span class="quick-action-icon">💰</span>
+                    <div class="quick-action-text">
+                        <p class="quick-action-title">Nova Cobrança</p>
+                        <p class="quick-action-sub">Emitir fatura</p>
+                    </div>
+                </button>
+                <button class="btn quick-action-btn">
+                    <span class="quick-action-icon">⚠️</span>
+                    <div class="quick-action-text">
+                        <p class="quick-action-title">Enviar Lembrete</p>
+                        <p class="quick-action-sub">WhatsApp</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

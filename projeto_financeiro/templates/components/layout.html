@@ -1,0 +1,28 @@
+{# templates/components/layout.html #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block page_title %}Dashboard{% endblock %} - Financeiro Amazonas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Design system + layout padrão da aplicação -->
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+  {% include 'components/sidebar.html' %}
+
+  <div class="app-main">
+    {% include 'components/header.html' with title=page_title subtitle=page_subtitle %}
+    <main class="app-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

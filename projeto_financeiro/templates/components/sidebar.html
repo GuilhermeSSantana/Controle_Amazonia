@@ -1,0 +1,62 @@
+{# templates/partials/sidebar.html #}
+<aside class="app-sidebar">
+  <!-- Logo / Marca -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo-wrap">
+      <div class="sidebar-logo-icon">
+        <span class="icon">🏗️</span>
+      </div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-title">Amazônia</div>
+        <div class="sidebar-logo-subtitle">Engenharia</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegação -->
+  <nav class="sidebar-nav">
+    <a href="/dashboard/"
+       class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}is-active{% endif %}">
+      <span class="icon">🏠</span>
+      <span>Dashboard</span>
+    </a>
+
+    <a href="/clientes/"
+       class="nav-link {% if request.path|slice:':10' == '/clientes/' %}is-active{% endif %}">
+      <span class="icon">👥</span>
+      <span>Clientes</span>
+    </a>
+
+    <a href="/jobs/"
+       class="nav-link {% if request.path|slice:':6' == '/jobs/' %}is-active{% endif %}">
+      <span class="icon">💼</span>
+      <span>Jobs</span>
+    </a>
+
+    <a href="/cobrancas/"
+       class="nav-link {% if request.path|slice:':11' == '/cobrancas/' %}is-active{% endif %}">
+      <span class="icon">💰</span>
+      <span>Cobranças</span>
+    </a>
+
+    <a href="/relatorios/"
+       class="nav-link {% if request.path|slice:':11' == '/relatorios/' %}is-active{% endif %}">
+      <span class="icon">📊</span>
+      <span>Relatórios</span>
+    </a>
+
+    <a href="/configuracoes/"
+       class="nav-link {% if request.path|slice:':15' == '/configuracoes/' %}is-active{% endif %}">
+      <span class="icon">⚙️</span>
+      <span>Configurações</span>
+    </a>
+  </nav>
+
+  <!-- Rodapé -->
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-box">
+      <p class="sidebar-footer-title">Sistema de Cobrança</p>
+      <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
+    </div>
+  </div>
+</aside>

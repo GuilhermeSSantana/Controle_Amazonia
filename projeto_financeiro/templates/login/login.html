@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Financeiro Amazonas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Design system + estilos da página de login -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body class="login-page">
+<div class="login-container">
+    <div class="card">
+        <div class="card-header">
+            <div class="badge">
+                <span class="badge-dot"></span>
+                <span>Área restrita</span>
+            </div>
+            <h1>Entrar no sistema</h1>
+            <p class="subtitle">Acesse o painel financeiro do Amazonas.</p>
+        </div>
+
+        {# Erros gerais do formulário #}
+        {% if form.non_field_errors %}
+            <div class="errors">
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_username">Usuário</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    placeholder="seu.usuario"
+                    autofocus
+                    required
+                    value="{{ form.username.value|default_if_none:'' }}"
+                >
+                {% if form.username.errors %}
+                    <div class="field-error">
+                        <ul class="errorlist">
+                            {% for error in form.username.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                <input
+                    type="password"
+                    name="password"
+                    id="id_password"
+                    placeholder="********"
+                    required
+                >
+                {% if form.password.errors %}
+                    <div class="field-error">
+                        <ul class="errorlist">
+                            {% for error in form.password.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-footer">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    <span>Manter conectado</span>
+                </label>
+
+                <a href="#" class="forgot-link">Esqueci minha senha</a>
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Entrar
+            </button>
+
+            <p class="helper-text">
+                Dica: use o usuário e senha cadastrados pela TI ou criados via painel de usuários.
+            </p>
+
+            <span class="brand">Financeiro Amazonas</span>
+        </form>
+    </div>
+</div>
+</body>
+</html>

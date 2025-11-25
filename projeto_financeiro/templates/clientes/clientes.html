@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Clientes - Financeiro Amazonas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% load static %}
+
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+  <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+</head>
+
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-wrap">
+        <div class="sidebar-logo-icon">
+          <span class="icon">🏗️</span>
+        </div>
+        <div class="sidebar-logo-text">
+          <div class="sidebar-logo-title">Amazônia</div>
+          <div class="sidebar-logo-subtitle">Engenharia</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/dashboard/" class="nav-link">
+        <span class="icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="/clientes/" class="nav-link is-active">
+        <span class="icon">👥</span>
+        <span>Clientes</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-box">
+        <p class="sidebar-footer-title">Sistema de Cobrança</p>
+        <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="app-main">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="header-title">Clientes</h1>
+        <p class="header-subtitle">Gerencie sua base de clientes</p>
+      </div>
+
+      <div class="header-right">
+        <button class="btn-header icon-only">
+          <span class="icon">🔔</span>
+          <span class="badge-dot"></span>
+        </button>
+
+        <div class="user-chip">
+          <span class="icon">👤</span>
+          <span class="user-name">{{ request.user.username }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTEÚDO -->
+    <main class="app-content">
+      <div class="page clients-page">
+
+        <!-- Título -->
+        <div class="top-row">
+          <div class="top-row-main">
+            <h1>Clientes</h1>
+            <p>Gerencie sua base de clientes</p>
+          </div>
+          <div class="top-row-actions">
+            <a href="#cliente-form" class="btn btn-primary">
+              <span class="icon">＋</span>
+              <span>Novo Cliente</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- LAYOUT PRINCIPAL -->
+        <div class="clients-layout">
+
+          <!-- CARD: FILTROS + LISTA -->
+          <section class="card clients-filters">
+            <div class="card-header">
+              <div class="card-title">Buscar e filtrar clientes</div>
+              <p class="card-subtitle">Use a busca e os filtros para localizar clientes rapidamente.</p>
+            </div>
+
+            <div class="card-content">
+
+              <!-- FORM DE FILTRO -->
+              <form method="get" class="filters-form">
+                <div class="filters-search">
+                  <label for="q">Buscar</label>
+                  <div class="filters-search-input">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="q" name="q"
+                           placeholder="Nome, documento ou email..."
+                           value="{{ request.GET.q|default_if_none:'' }}">
+                  </div>
+                </div>
+
+                <div class="filters-status">
+                  <span class="filters-status-label">Status</span>
+
+                  {% with status=request.GET.status|default:"todos" %}
+                  <button type="submit" name="status" value="todos"
+                    class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
+                    Todos ({{ total_count }})
+                  </button>
+
+                  <button type="submit" name="status" value="ativo"
+                    class="btn btn-chip {% if status == 'ativo' %}is-active{% endif %}">
+                    Ativos ({{ active_count }})
+                  </button>
+
+                  <button type="submit" name="status" value="inativo"
+                    class="btn btn-chip {% if status == 'inativo' %}is-active{% endif %}">
+                    Inativos ({{ inactive_count }})
+                  </button>
+                  {% endwith %}
+                </div>
+              </form>
+
+              <!-- LISTA DE CLIENTES DENTRO DO CARD -->
+              <div class="clients-inline-wrapper">
+
+                {% if clients %}
+                <ul class="clients-inline-list">
+
+                  {% for client in clients %}
+                  <li class="client-inline-item">
+
+                    <div class="client-inline-main">
+                      <div class="client-avatar">
+                        {% if client.type == 'CNPJ' %}
+                          <span>🏢</span>
+                        {% else %}
+                          <span>👤</span>
+                        {% endif %}
+                      </div>
+
+                      <div class="client-inline-text">
+                        <span class="client-inline-name">{{ client.name }}</span>
+                        <span class="client-inline-sub">{{ client.type }} • {{ client.document }}</span>
+
+                        {% if client.email %}
+                          <span class="client-inline-sub">{{ client.email }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="client-inline-status">
+                      {% if client.is_active %}
+                        <span class="status-badge status-active">Ativo</span>
+                      {% else %}
+                        <span class="status-badge status-inactive">Inativo</span>
+                      {% endif %}
+                    </div>
+
+                  </li>
+                  {% endfor %}
+
+                </ul>
+
+                {% else %}
+                <div class="clients-inline-empty">
+                  <p>
+                    {% if request.GET.q %}
+                      Nenhum cliente corresponde à busca.
+                    {% else %}
+                      Nenhum cliente cadastrado ainda.
+                    {% endif %}
+                  </p>
+                </div>
+                {% endif %}
+
+              </div>
+            </div>
+          </section>
+
+          <!-- FORMULÁRIO DE CADASTRO -->
+          <section class="card clients-form" id="cliente-form">
+            <div class="card-header">
+              <div class="card-title">Cadastrar novo cliente</div>
+              <p class="card-subtitle">Preencha os dados abaixo:</p>
+            </div>
+
+            <div class="card-content">
+              <form method="post" class="client-form">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Nome</label>
+                    {{ form.name }}
+                  </div>
+
+                  <div class="form-group">
+                    <label>Tipo</label>
+                    {{ form.type }}
+                  </div>
+
+                  <div class="form-group">
+                    <label>Documento</label>
+                    {{ form.document }}
+                  </div>
+
+                  <div class="form-group">
+                    <label>Email</label>
+                    {{ form.email }}
+                  </div>
+
+                  <div class="form-group">
+                    <label>Telefone</label>
+                    {{ form.phone }}
+                  </div>
+
+                  <div class="form-group form-group-full">
+                    <label>Endereço</label>
+                    {{ form.address }}
+                  </div>
+
+                  <div class="form-group form-group-full">
+                    <label>Notas</label>
+                    {{ form.notes }}
+                  </div>
+
+                  <div class="form-group form-group-full form-group-inline">
+                    <label class="checkbox-inline">
+                      {{ form.is_active }}
+                      <span>Cliente ativo</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary">Salvar Cliente</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+</div>
+</body>
+</html>
