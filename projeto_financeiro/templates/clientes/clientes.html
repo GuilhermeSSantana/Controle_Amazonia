@@ -169,6 +169,12 @@
                       {% else %}
                         <span class="status-badge status-inactive">Inativo</span>
                       {% endif %}
+
+                      <div class="client-inline-actions">
+                        <a href="{% url 'cliente_detalhe' client.id %}" class="btn btn-outline-sm">
+                          Ver detalhes
+                        </a>
+                      </div>
                     </div>
 
                   </li>
@@ -260,5 +266,62 @@
 
   </div>
 </div>
+
+<!-- MÁSCARAS JS SIMPLES -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const docInput = document.getElementById('id_document');
+    const typeSelect = document.getElementById('id_type');
+    const phoneInput = document.getElementById('id_phone');
+
+    function onlyDigits(value) {
+      return value.replace(/\D/g, '');
+    }
+
+    function formatCPF(v) {
+      v = onlyDigits(v).slice(0, 11);
+      if (v.length <= 3) return v;
+      if (v.length <= 6) return v.replace(/(\d{3})(\d+)/, '$1.$2');
+      if (v.length <= 9) return v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    }
+
+    function formatCNPJ(v) {
+      v = onlyDigits(v).slice(0, 14);
+      if (v.length <= 2) return v;
+      if (v.length <= 5) return v.replace(/(\d{2})(\d+)/, '$1.$2');
+      if (v.length <= 8) return v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+      if (v.length <= 12) return v.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+      return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+    }
+
+    function formatPhone(v) {
+      v = onlyDigits(v).slice(0, 11);
+      if (v.length <= 2) return '(' + v;
+      if (v.length <= 6) return v.replace(/(\d{2})(\d+)/, '($1) $2');
+      if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+      return v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
+    }
+
+    function applyDocMask() {
+      if (!docInput || !typeSelect) return;
+      const type = typeSelect.value;
+      let value = docInput.value;
+      docInput.value = type === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
+    }
+
+    if (docInput && typeSelect) {
+      docInput.addEventListener('input', applyDocMask);
+      typeSelect.addEventListener('change', applyDocMask);
+      applyDocMask();
+    }
+
+    if (phoneInput) {
+      phoneInput.addEventListener('input', function () {
+        phoneInput.value = formatPhone(phoneInput.value);
+      });
+    }
+  });
+</script>
 </body>
 </html>

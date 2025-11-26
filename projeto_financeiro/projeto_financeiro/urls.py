@@ -23,4 +23,7 @@ urlpatterns = [
 
     # CLIENTES
     path('clientes/', views.clientes, name='clientes'),
+    path('clientes/<int:pk>/', views.cliente_detalhe, name='cliente_detalhe'),
+    path('clientes/<int:pk>/editar/', views.cliente_editar, name='cliente_editar'),
+    path('clientes/<int:pk>/excluir/', views.cliente_excluir, name='cliente_excluir'),
 ]
