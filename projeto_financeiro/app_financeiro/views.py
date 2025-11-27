@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.db.models import Q
 
 from .models import Client
@@ -72,36 +73,19 @@ def cliente_detalhe(request, pk):
 
 
 @login_required
-def cliente_editar(request, pk):
-    client = get_object_or_404(Client, pk=pk)
+@require_POST
+def cliente_atualizar(request):
+    client_id = request.POST.get("client_id")
+    client = get_object_or_404(Client, pk=client_id)
 
-    if request.method == "POST":
-        form = ClientForm(request.POST, instance=client)
-        if form.is_valid():
-            form.save()
-            return redirect("cliente_detalhe", pk=client.pk)
-    else:
-        form = ClientForm(instance=client)
+    # ✅ AGORA SALVA O NOME TAMBÉM
+    client.name = (request.POST.get("name") or "").strip()
+    client.email = (request.POST.get("email") or "").strip()
+    client.phone = (request.POST.get("phone") or "").strip()
+    client.address = (request.POST.get("address") or "").strip()
+    client.notes = (request.POST.get("notes") or "").strip()
+    client.is_active = bool(request.POST.get("is_active"))
 
-    context = {
-        "client": client,
-        "form": form,
-        "page_title": f"Editar Cliente - {client.name}",
-        "is_edit": True,
-    }
-    return render(request, "clientes/cliente_editar.html", context)
+    client.save()
 
-
-@login_required
-def cliente_excluir(request, pk):
-    client = get_object_or_404(Client, pk=pk)
-
-    if request.method == "POST":
-        client.delete()
-        return redirect("clientes")
-
-    context = {
-        "client": client,
-        "page_title": f"Excluir Cliente - {client.name}",
-    }
-    return render(request, "clientes/cliente_excluir.html", context)
+    return redirect("clientes")

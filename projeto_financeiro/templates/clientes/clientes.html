@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <title>Clientes - Financeiro Amazonas</title>
@@ -12,316 +13,515 @@
 </head>
 
 <body>
-<div class="app-shell">
+  <div class="app-shell">
 
-  <!-- SIDEBAR -->
-  <aside class="app-sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo-wrap">
-        <div class="sidebar-logo-icon">
-          <span class="icon">🏗️</span>
-        </div>
-        <div class="sidebar-logo-text">
-          <div class="sidebar-logo-title">Amazônia</div>
-          <div class="sidebar-logo-subtitle">Engenharia</div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="/dashboard/" class="nav-link">
-        <span class="icon">🏠</span>
-        <span>Dashboard</span>
-      </a>
-
-      <a href="/clientes/" class="nav-link is-active">
-        <span class="icon">👥</span>
-        <span>Clientes</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="sidebar-footer-box">
-        <p class="sidebar-footer-title">Sistema de Cobrança</p>
-        <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="app-main">
-
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-left">
-        <h1 class="header-title">Clientes</h1>
-        <p class="header-subtitle">Gerencie sua base de clientes</p>
-      </div>
-
-      <div class="header-right">
-        <button class="btn-header icon-only">
-          <span class="icon">🔔</span>
-          <span class="badge-dot"></span>
-        </button>
-
-        <div class="user-chip">
-          <span class="icon">👤</span>
-          <span class="user-name">{{ request.user.username }}</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- CONTEÚDO -->
-    <main class="app-content">
-      <div class="page clients-page">
-
-        <!-- Título -->
-        <div class="top-row">
-          <div class="top-row-main">
-            <h1>Clientes</h1>
-            <p>Gerencie sua base de clientes</p>
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-wrap">
+          <div class="sidebar-logo-icon">
+            <span class="icon">🏗️</span>
           </div>
-          <div class="top-row-actions">
-            <a href="#cliente-form" class="btn btn-primary">
-              <span class="icon">＋</span>
-              <span>Novo Cliente</span>
-            </a>
+          <div class="sidebar-logo-text">
+            <div class="sidebar-logo-title">Amazônia</div>
+            <div class="sidebar-logo-subtitle">Engenharia</div>
           </div>
         </div>
+      </div>
 
-        <!-- LAYOUT PRINCIPAL -->
-        <div class="clients-layout">
+      <nav class="sidebar-nav">
+        <a href="/dashboard/" class="nav-link">
+          <span class="icon">🏠</span>
+          <span>Dashboard</span>
+        </a>
 
-          <!-- CARD: FILTROS + LISTA -->
-          <section class="card clients-filters">
-            <div class="card-header">
-              <div class="card-title">Buscar e filtrar clientes</div>
-              <p class="card-subtitle">Use a busca e os filtros para localizar clientes rapidamente.</p>
+        <a href="/clientes/" class="nav-link is-active">
+          <span class="icon">👥</span>
+          <span>Clientes</span>
+        </a>
+
+        <a href="/jobs/" class="nav-link">
+          <span class="icon">💼</span>
+          <span>Jobs</span>
+        </a>
+
+        <a href="/cobrancas/" class="nav-link">
+          <span class="icon">💰</span>
+          <span>Cobranças</span>
+        </a>
+
+        <a href="/relatorios/" class="nav-link">
+          <span class="icon">📊</span>
+          <span>Relatórios</span>
+        </a>
+
+        <a href="/configuracoes/" class="nav-link">
+          <span class="icon">⚙️</span>
+          <span>Configurações</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-box">
+          <p class="sidebar-footer-title">Sistema de Cobrança</p>
+          <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="app-main">
+
+      <!-- HEADER -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 class="header-title">Clientes</h1>
+          <p class="header-subtitle">Gerencie sua base de clientes</p>
+        </div>
+
+        <div class="header-right">
+          <button class="btn-header icon-only" type="button">
+            <span class="icon">🔔</span>
+            <span class="badge-dot"></span>
+          </button>
+
+          <div class="user-chip">
+            <span class="icon">👤</span>
+            <span class="user-name">{{ request.user.username }}</span>
+          </div>
+
+          <form action="/logout/" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button class="btn-header icon-only" type="submit" title="Sair">
+              <span class="icon">⏻</span>
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <!-- CONTEÚDO -->
+      <main class="app-content">
+        <div class="page clients-page">
+
+          <!-- Título + botão que abre modal de cadastro -->
+          <div class="top-row">
+            <div class="top-row-main">
+              <h1>Clientes</h1>
+              <p>Gerencie sua base de clientes</p>
             </div>
+            <div class="top-row-actions">
+              <button id="btn-open-create-modal" type="button" class="btn btn-primary">
+                <span class="icon">＋</span>
+                <span>Novo Cliente</span>
+              </button>
+            </div>
+          </div>
 
-            <div class="card-content">
+          <!-- LAYOUT PRINCIPAL: card de filtros + lista -->
+          <div class="clients-layout clients-layout-single">
 
-              <!-- FORM DE FILTRO -->
-              <form method="get" class="filters-form">
-                <div class="filters-search">
-                  <label for="q">Buscar</label>
-                  <div class="filters-search-input">
-                    <span class="icon">🔍</span>
-                    <input type="text" id="q" name="q"
-                           placeholder="Nome, documento ou email..."
-                           value="{{ request.GET.q|default_if_none:'' }}">
-                  </div>
-                </div>
-
-                <div class="filters-status">
-                  <span class="filters-status-label">Status</span>
-
-                  {% with status=request.GET.status|default:"todos" %}
-                  <button type="submit" name="status" value="todos"
-                    class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
-                    Todos ({{ total_count }})
-                  </button>
-
-                  <button type="submit" name="status" value="ativo"
-                    class="btn btn-chip {% if status == 'ativo' %}is-active{% endif %}">
-                    Ativos ({{ active_count }})
-                  </button>
-
-                  <button type="submit" name="status" value="inativo"
-                    class="btn btn-chip {% if status == 'inativo' %}is-active{% endif %}">
-                    Inativos ({{ inactive_count }})
-                  </button>
-                  {% endwith %}
-                </div>
-              </form>
-
-              <!-- LISTA DE CLIENTES DENTRO DO CARD -->
-              <div class="clients-inline-wrapper">
-
-                {% if clients %}
-                <ul class="clients-inline-list">
-
-                  {% for client in clients %}
-                  <li class="client-inline-item">
-
-                    <div class="client-inline-main">
-                      <div class="client-avatar">
-                        {% if client.type == 'CNPJ' %}
-                          <span>🏢</span>
-                        {% else %}
-                          <span>👤</span>
-                        {% endif %}
-                      </div>
-
-                      <div class="client-inline-text">
-                        <span class="client-inline-name">{{ client.name }}</span>
-                        <span class="client-inline-sub">{{ client.type }} • {{ client.document }}</span>
-
-                        {% if client.email %}
-                          <span class="client-inline-sub">{{ client.email }}</span>
-                        {% endif %}
-                      </div>
-                    </div>
-
-                    <div class="client-inline-status">
-                      {% if client.is_active %}
-                        <span class="status-badge status-active">Ativo</span>
-                      {% else %}
-                        <span class="status-badge status-inactive">Inativo</span>
-                      {% endif %}
-
-                      <div class="client-inline-actions">
-                        <a href="{% url 'cliente_detalhe' client.id %}" class="btn btn-outline-sm">
-                          Ver detalhes
-                        </a>
-                      </div>
-                    </div>
-
-                  </li>
-                  {% endfor %}
-
-                </ul>
-
-                {% else %}
-                <div class="clients-inline-empty">
-                  <p>
-                    {% if request.GET.q %}
-                      Nenhum cliente corresponde à busca.
-                    {% else %}
-                      Nenhum cliente cadastrado ainda.
-                    {% endif %}
-                  </p>
-                </div>
-                {% endif %}
-
+            <!-- CARD: FILTROS + LISTA -->
+            <section class="card clients-filters">
+              <div class="card-header">
+                <div class="card-title">Buscar e filtrar clientes</div>
+                <p class="card-subtitle">Use a busca e os filtros para localizar clientes rapidamente.</p>
               </div>
-            </div>
-          </section>
 
-          <!-- FORMULÁRIO DE CADASTRO -->
-          <section class="card clients-form" id="cliente-form">
-            <div class="card-header">
-              <div class="card-title">Cadastrar novo cliente</div>
-              <p class="card-subtitle">Preencha os dados abaixo:</p>
-            </div>
+              <div class="card-content">
 
-            <div class="card-content">
-              <form method="post" class="client-form">
-                {% csrf_token %}
-
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Nome</label>
-                    {{ form.name }}
+                <!-- FORM DE FILTRO -->
+                <form method="get" class="filters-form">
+                  <div class="filters-search">
+                    <label for="q">Buscar</label>
+                    <div class="filters-search-input">
+                      <span class="icon">🔍</span>
+                      <input type="text" id="q" name="q" placeholder="Nome, documento ou email..."
+                        value="{{ request.GET.q|default_if_none:'' }}">
+                    </div>
                   </div>
 
-                  <div class="form-group">
-                    <label>Tipo</label>
-                    {{ form.type }}
+                  <div class="filters-status">
+                    <span class="filters-status-label">Status</span>
+                    {% with status=request.GET.status|default:"todos" %}
+                    <button type="submit" name="status" value="todos"
+                      class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
+                      Todos ({{ total_count }})
+                    </button>
+                    <button type="submit" name="status" value="ativo"
+                      class="btn btn-chip {% if status == 'ativo' %}is-active{% endif %}">
+                      Ativos ({{ active_count }})
+                    </button>
+                    <button type="submit" name="status" value="inativo"
+                      class="btn btn-chip {% if status == 'inativo' %}is-active{% endif %}">
+                      Inativos ({{ inactive_count }})
+                    </button>
+                    {% endwith %}
                   </div>
+                </form>
 
-                  <div class="form-group">
-                    <label>Documento</label>
-                    {{ form.document }}
-                  </div>
+                <!-- LISTA DE CLIENTES DENTRO DO CARD -->
+                <div class="clients-inline-wrapper">
+                  {% if clients %}
+                  <ul class="clients-inline-list">
+                    {% for client in clients %}
+                    <li class="client-inline-item">
+                      <div class="client-inline-main">
+                        <div class="client-avatar">
+                          {% if client.type == 'CNPJ' %}
+                          <span>🏢</span>
+                          {% else %}
+                          <span>👤</span>
+                          {% endif %}
+                        </div>
+                        <div class="client-inline-text">
+                          <span class="client-inline-name">{{ client.name }}</span>
+                          <span class="client-inline-sub">
+                            {{ client.type }} • {{ client.document }}
+                          </span>
+                          {% if client.email %}
+                          <span class="client-inline-sub">{{ client.email }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
 
-                  <div class="form-group">
-                    <label>Email</label>
-                    {{ form.email }}
-                  </div>
+                      <div class="client-inline-status">
+                        {% if client.is_active %}
+                        <span class="status-badge status-active">Ativo</span>
+                        {% else %}
+                        <span class="status-badge status-inactive">Inativo</span>
+                        {% endif %}
 
-                  <div class="form-group">
-                    <label>Telefone</label>
-                    {{ form.phone }}
+                        <div class="client-inline-actions">
+                          <button type="button" class="btn btn-outline-sm js-open-detail" data-id="{{ client.id }}"
+                            data-name="{{ client.name }}" data-type="{{ client.type }}"
+                            data-document="{{ client.document }}" data-email="{{ client.email|default_if_none:'' }}"
+                            data-phone="{{ client.phone|default_if_none:'' }}"
+                            data-address="{{ client.address|default_if_none:'' }}"
+                            data-notes="{{ client.notes|default_if_none:'' }}"
+                            data-is-active="{% if client.is_active %}true{% else %}false{% endif %}">
+                            Detalhes
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% else %}
+                  <div class="clients-inline-empty">
+                    <p>
+                      {% if request.GET.q %}
+                      Nenhum cliente corresponde à busca.
+                      {% else %}
+                      Nenhum cliente cadastrado ainda.
+                      {% endif %}
+                    </p>
                   </div>
-
-                  <div class="form-group form-group-full">
-                    <label>Endereço</label>
-                    {{ form.address }}
-                  </div>
-
-                  <div class="form-group form-group-full">
-                    <label>Notas</label>
-                    {{ form.notes }}
-                  </div>
-
-                  <div class="form-group form-group-full form-group-inline">
-                    <label class="checkbox-inline">
-                      {{ form.is_active }}
-                      <span>Cliente ativo</span>
-                    </label>
-                  </div>
+                  {% endif %}
                 </div>
+              </div>
+            </section>
 
-                <div class="form-actions">
-                  <button type="submit" class="btn-primary">Salvar Cliente</button>
-                </div>
-              </form>
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- MODAL: CADASTRAR NOVO CLIENTE -->
+  <div id="modal-create-overlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Cadastrar novo cliente</h2>
+        <button type="button" class="modal-close" data-close-modal="create">&times;</button>
+      </div>
+      <div class="modal-body">
+        {% if form.errors %}
+        <div class="form-errors">
+          <p>Verifique os campos destacados abaixo.</p>
+        </div>
+        {% endif %}
+
+        <form method="post" class="client-form">
+          {% csrf_token %}
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="id_name">Nome</label>
+              {{ form.name }}
             </div>
-          </section>
+
+            <div class="form-group">
+              <label for="id_type">Tipo de Documento</label>
+              {{ form.type }}
+            </div>
+
+            <div class="form-group">
+              <label for="id_document">Documento</label>
+              {{ form.document }}
+            </div>
+
+            <div class="form-group">
+              <label for="id_email">Email</label>
+              {{ form.email }}
+            </div>
+
+            <div class="form-group">
+              <label for="id_phone">Telefone</label>
+              {{ form.phone }}
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="id_address">Endereço</label>
+              {{ form.address }}
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="id_notes">Observações</label>
+              {{ form.notes }}
+            </div>
+
+            <div class="form-group form-group-full form-group-inline">
+              <label class="checkbox-inline">
+                {{ form.is_active }}
+                <span>Cliente ativo</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salvar Cliente</button>
+            <button type="button" class="btn btn-outline" data-close-modal="create">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALHES / EDIÇÃO RÁPIDA DO CLIENTE -->
+  <div id="modal-detail-overlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Detalhes do Cliente</h2>
+        <button type="button" class="modal-close" data-close-modal="detail">&times;</button>
+      </div>
+
+      <form id="detail-edit-form" class="modal-body detail-form" method="post" action="{% url 'cliente_atualizar' %}">
+        {% csrf_token %}
+        <input type="hidden" id="detail-id" name="client_id">
+
+        <!-- ✅ NOVO CAMPO: NOME -->
+        <div class="detail-row">
+          <label for="detail-name-input">Nome</label>
+          <input type="text" id="detail-name-input" name="name" placeholder="Nome do cliente">
         </div>
 
-      </div>
-    </main>
+        <div class="detail-row">
+          <label for="detail-document">Documento</label>
+          <input type="text" id="detail-document" name="document" readonly>
+        </div>
 
+        <div class="detail-row">
+          <label for="detail-email">Email</label>
+          <input type="email" id="detail-email" name="email">
+        </div>
+
+        <div class="detail-row">
+          <label for="detail-phone">Telefone</label>
+          <input type="text" id="detail-phone" name="phone">
+        </div>
+
+        <div class="detail-row">
+          <label for="detail-address">Endereço</label>
+          <input type="text" id="detail-address" name="address">
+        </div>
+
+        <div class="detail-row">
+          <label for="detail-notes">Observações</label>
+          <textarea id="detail-notes" name="notes" rows="3"></textarea>
+        </div>
+
+        <div class="detail-row detail-row-inline">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="detail-is-active" name="is_active">
+            <span>Cliente ativo</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-close-modal="detail">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary">
+            Salvar alterações
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- MÁSCARAS JS SIMPLES -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const docInput = document.getElementById('id_document');
-    const typeSelect = document.getElementById('id_type');
-    const phoneInput = document.getElementById('id_phone');
 
-    function onlyDigits(value) {
-      return value.replace(/\D/g, '');
+  <!-- JS: Máscaras + Modais + Detalhes -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // ===== Máscaras =====
+      try {
+        const docInput = document.getElementById('id_document');
+        const typeSelect = document.getElementById('id_type');
+        const phoneInput = document.getElementById('id_phone');
+
+        function onlyDigits(value) {
+          return (value || '').replace(/\D/g, '');
+        }
+
+        function formatCPF(v) {
+          v = onlyDigits(v).slice(0, 11);
+          if (v.length <= 3) return v;
+          if (v.length <= 6) return v.replace(/(\d{3})(\d+)/, '$1.$2');
+          if (v.length <= 9) return v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+          return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        }
+
+        function formatCNPJ(v) {
+          v = onlyDigits(v).slice(0, 14);
+          if (v.length <= 2) return v;
+          if (v.length <= 5) return v.replace(/(\d{2})(\d+)/, '$1.$2');
+          if (v.length <= 8) return v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+          if (v.length <= 12) return v.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+          return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+        }
+
+        function formatPhone(v) {
+          v = onlyDigits(v).slice(0, 11);
+          if (v.length <= 2) return '(' + v;
+          if (v.length <= 6) return v.replace(/(\d{2})(\d+)/, '($1) $2');
+          if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+          return v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
+        }
+
+        function applyDocMask() {
+          if (!docInput || !typeSelect) return;
+          const type = typeSelect.value;
+          let value = docInput.value || '';
+          docInput.value = type === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
+        }
+
+        if (docInput && typeSelect) {
+          docInput.addEventListener('input', applyDocMask);
+          typeSelect.addEventListener('change', applyDocMask);
+          applyDocMask();
+        }
+
+        if (phoneInput) {
+          phoneInput.addEventListener('input', function () {
+            phoneInput.value = formatPhone(phoneInput.value || '');
+          });
+        }
+      } catch (e) {
+        console.warn('Erro nas máscaras (ignorado):', e);
+      }
+
+      // ===== Modais =====
+      const modalCreate = document.getElementById('modal-create-overlay');
+      const modalDetail = document.getElementById('modal-detail-overlay');
+      const btnOpenCreate = document.getElementById('btn-open-create-modal');
+
+      function openModal(modal) {
+        if (modal) modal.classList.add('is-open');
+      }
+
+      function closeModal(modal) {
+        if (modal) modal.classList.remove('is-open');
+      }
+
+      if (btnOpenCreate && modalCreate) {
+        btnOpenCreate.addEventListener('click', function () {
+          openModal(modalCreate);
+        });
+      }
+
+      document.querySelectorAll('[data-close-modal="create"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          closeModal(modalCreate);
+        });
+      });
+
+      document.querySelectorAll('[data-close-modal="detail"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          closeModal(modalDetail);
+        });
+      });
+
+      // Fechar clicando fora
+      [modalCreate, modalDetail].forEach(function (overlay) {
+        if (!overlay) return;
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) {
+            overlay.classList.remove('is-open');
+          }
+        });
+      });
+
+      // ESC fecha
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          closeModal(modalCreate);
+          closeModal(modalDetail);
+        }
+      });
+
+      // Se der erro de validação no form de criação, abre o modal automaticamente
+      var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
+    if (hasErrors && modalCreate) {
+      openModal(modalCreate);
     }
 
-    function formatCPF(v) {
-      v = onlyDigits(v).slice(0, 11);
-      if (v.length <= 3) return v;
-      if (v.length <= 6) return v.replace(/(\d{3})(\d+)/, '$1.$2');
-      if (v.length <= 9) return v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
-      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-    }
+    // ===== Detalhes do cliente (preenche modal com inputs) =====
+    const detailId = document.getElementById('detail-id');
+    const detailNameInput = document.getElementById('detail-name-input');
+    const detailDocument = document.getElementById('detail-document');
+    const detailEmail = document.getElementById('detail-email');
+    const detailPhone = document.getElementById('detail-phone');
+    const detailAddress = document.getElementById('detail-address');
+    const detailNotes = document.getElementById('detail-notes');
+    const detailIsActive = document.getElementById('detail-is-active');
 
-    function formatCNPJ(v) {
-      v = onlyDigits(v).slice(0, 14);
-      if (v.length <= 2) return v;
-      if (v.length <= 5) return v.replace(/(\d{2})(\d+)/, '$1.$2');
-      if (v.length <= 8) return v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
-      if (v.length <= 12) return v.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
-      return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
-    }
+    document.querySelectorAll('.js-open-detail').forEach(function (btn) {
+      btn.addEventListener('click', function () {
 
-    function formatPhone(v) {
-      v = onlyDigits(v).slice(0, 11);
-      if (v.length <= 2) return '(' + v;
-      if (v.length <= 6) return v.replace(/(\d{2})(\d+)/, '($1) $2');
-      if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
-      return v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
-    }
+        if (detailId) detailId.value = this.dataset.id || '';
+        if (detailNameInput) detailNameInput.value = this.dataset.name || '';
+        if (detailDocument) detailDocument.value = (this.dataset.type || '') + ' • ' + (this.dataset.document || '');
+        if (detailEmail) detailEmail.value = this.dataset.email || '';
+        if (detailPhone) detailPhone.value = this.dataset.phone || '';
+        if (detailAddress) detailAddress.value = this.dataset.address || '';
+        if (detailNotes) detailNotes.value = this.dataset.notes || '';
+        if (detailIsActive) detailIsActive.checked = this.dataset.isActive === 'true';
 
-    function applyDocMask() {
-      if (!docInput || !typeSelect) return;
-      const type = typeSelect.value;
-      let value = docInput.value;
-      docInput.value = type === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
-    }
+        openModal(modalDetail);
+      });
+    });
 
-    if (docInput && typeSelect) {
-      docInput.addEventListener('input', applyDocMask);
-      typeSelect.addEventListener('change', applyDocMask);
-      applyDocMask();
-    }
-
-    if (phoneInput) {
-      phoneInput.addEventListener('input', function () {
-        phoneInput.value = formatPhone(phoneInput.value);
+    // Botão "Salvar alterações" (por enquanto só mostra no console)
+    const detailSaveBtn = document.getElementById('detail-save-btn');
+    if (detailSaveBtn) {
+      detailSaveBtn.addEventListener('click', function () {
+        console.log('Dados que poderiam ser enviados para update:', {
+          id: detailId ? detailId.value : null,
+          email: detailEmail ? detailEmail.value : null,
+          phone: detailPhone ? detailPhone.value : null,
+          address: detailAddress ? detailAddress.value : null,
+          notes: detailNotes ? detailNotes.value : null,
+          is_active: detailIsActive ? detailIsActive.checked : null,
+        });
+        alert('Edição pronta visualmente. Depois conectamos isso à view de update no Django. 😉');
       });
     }
   });
-</script>
+  </script>
 </body>
+
 </html>
