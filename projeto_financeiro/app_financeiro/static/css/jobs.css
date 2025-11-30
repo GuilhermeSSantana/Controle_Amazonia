@@ -1,0 +1,277 @@
+/* ===========================
+   REFINO VISUAL – JOBS
+   (cola isso no final do jobs.css)
+   =========================== */
+
+/* --- 1. Cabeçalho da página --- */
+
+.jobs-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+.jobs-page .top-row-main h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.jobs-page .top-row-main p {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Botão "Cadastrar novo job" mais destacadinho */
+.jobs-page .top-row-actions .btn.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding-inline: 16px;
+}
+
+/* --- 2. Cards de métricas (stats) --- */
+
+.jobs-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .jobs-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .jobs-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jobs-stat-card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: radial-gradient(circle at top left, #eff6ff 0, #ffffff 45%, #f9fafb 100%);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.jobs-stat-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jobs-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  font-size: 1.1rem;
+}
+
+.jobs-stat-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.jobs-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* --- 3. Filtros de status (chips) – mais limpos e legíveis --- */
+
+.jobs-filters .filters-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn.btn-chip {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn.btn-chip:hover {
+  background-color: #e5efff;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+.btn.btn-chip.is-active {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Garante que texto não suma em nenhum estado */
+.jobs-page .filters-status .btn.btn-chip *,
+.jobs-page .filters-status .btn.btn-chip {
+  color: inherit !important;
+}
+
+/* --- 4. Lista de jobs (cardzinho mais moderno) --- */
+
+.jobs-inline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.job-inline-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
+}
+
+.job-inline-item:hover {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+  border-color: #d1d5db;
+}
+
+.job-inline-main {
+  display: flex;
+  gap: 10px;
+}
+
+.job-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  font-size: 1.2rem;
+}
+
+.job-inline-text .job-inline-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.job-inline-text .job-inline-sub {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.job-inline-text .job-inline-desc {
+  margin-top: 2px;  
+}
+
+/* Bloco da direita (status + progresso + botão editar) */
+.job-inline-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 220px;
+}
+
+@media (max-width: 768px) {
+  .job-inline-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .job-inline-status {
+    align-items: flex-start;
+    min-width: 0;
+  }
+}
+
+/* --- 5. Status badge mais “profissional” --- */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-paid {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-neutral {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* --- 6. Barra de progresso com cor forte --- */
+
+.job-progress {
+  width: 100%;
+  max-width: 220px;
+}
+
+.job-progress-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-bottom: 3px;
+}
+
+.job-progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+  position: relative;
+}
+
+.job-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width 0.25s ease-out;
+}
+
+/* Se for 0%, ainda mostra um fiozinho */
+.job-progress-fill[style*="0%"] {
+  width: 3% !important;
+  opacity: 0.4;
+}
+
+/* --- 7. Botão de editar na lista --- */
+
+.job-inline-actions .btn-outline-sm {
+  border-radius: 999px;
+  padding-inline: 12px;
+  font-size: 0.78rem;
+}
+
+

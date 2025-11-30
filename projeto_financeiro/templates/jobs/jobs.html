@@ -1,0 +1,483 @@
+{% extends "components/layout.html" %} {% load static %} {% block page_title
+%}Jobs {% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/clientes.css' %}" />
+{# CSS específico da página de jobs #}
+<link rel="stylesheet" href="{% static 'css/jobs.css' %}" />
+{% endblock %} {% block content %}
+<div class="page jobs-page">
+  <!-- Topo: título + botão Novo Job (abre modal) -->
+  <div class="top-row">
+    <div class="top-row-main">
+      <h1>Jobs & Serviços</h1>
+      <p>Gerencie seus projetos, consultorias e serviços</p>
+    </div>
+    <div class="top-row-actions">
+      <button
+        id="btn-open-job-create-modal"
+        type="button"
+        class="btn btn-primary"
+      >
+        <span class="icon">＋</span>
+        <span>Cadastrar novo job</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Layout principal: stats + card de filtros/lista -->
+  <div class="jobs-layout">
+    <!-- Stats -->
+    <section class="jobs-stats">
+      <div class="card jobs-stat-card">
+        <div class="jobs-stat-main">
+          <div class="jobs-stat-icon">📂</div>
+          <div>
+            <p class="jobs-stat-label">Total de Jobs</p>
+            <p class="jobs-stat-value">{{ total_count }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card jobs-stat-card">
+        <div class="jobs-stat-main">
+          <div class="jobs-stat-icon">⏳</div>
+          <div>
+            <p class="jobs-stat-label">Em andamento</p>
+            <p class="jobs-stat-value">{{ andamento_count }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card jobs-stat-card">
+        <div class="jobs-stat-main">
+          <div class="jobs-stat-icon">✅</div>
+          <div>
+            <p class="jobs-stat-label">Concluídos</p>
+            <p class="jobs-stat-value">{{ concluido_count }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card jobs-stat-card">
+        <div class="jobs-stat-main">
+          <div class="jobs-stat-icon">🕒</div>
+          <div>
+            <p class="jobs-stat-label">Pendentes</p>
+            <p class="jobs-stat-value">{{ pendente_count }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card: filtros + lista -->
+    <section class="card jobs-filters">
+      <div class="card-header">
+        <div class="card-title">Buscar e filtrar jobs</div>
+        <p class="card-subtitle">
+          Use a busca e o status para localizar jobs rapidamente.
+        </p>
+      </div>
+
+      <div class="card-content">
+        <!-- Filtros -->
+        <form method="get" class="filters-form">
+          <div class="filters-search">
+            <label for="q">Buscar</label>
+            <div class="filters-search-input">
+              <span class="icon">🔍</span>
+              <input
+                type="text"
+                id="q"
+                name="q"
+                placeholder="Título, cliente ou descrição..."
+                value="{{ search_query|default_if_none:'' }}"
+              />
+            </div>
+          </div>
+
+          <div class="filters-status">
+            <span class="filters-status-label">Status</span>
+            {% with status=current_status|default:"todos" %}
+            <button
+              type="submit"
+              name="status"
+              value="todos"
+              class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}"
+            >
+              Todos ({{ total_count }})
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value="em_andamento"
+              class="btn btn-chip {% if status == 'em_andamento' %}is-active{% endif %}"
+            >
+              Em andamento ({{ andamento_count }})
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value="concluido"
+              class="btn btn-chip {% if status == 'concluido' %}is-active{% endif %}"
+            >
+              Concluídos ({{ concluido_count }})
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value="pendente"
+              class="btn btn-chip {% if status == 'pendente' %}is-active{% endif %}"
+            >
+              Pendentes ({{ pendente_count }})
+            </button>
+            {% endwith %}
+          </div>
+        </form>
+
+        <!-- Lista de jobs -->
+        <div class="jobs-inline-wrapper">
+          {% if jobs %}
+          <ul class="jobs-inline-list">
+            {% for job in jobs %}
+            <li class="job-inline-item">
+              <div class="job-inline-main">
+                <div class="job-avatar">
+                  <span>💼</span>
+                </div>
+                <div class="job-inline-text">
+                  <span class="job-inline-title">{{ job.title }}</span>
+                  <span class="job-inline-sub">
+                    Cliente: {{ job.client }}
+                  </span>
+                  <span class="job-inline-sub">
+                    Valor: R$ {{ job.value }} • Início: {{ job.start_date }} •
+                    Entrega: {{ job.delivery_date }}
+                  </span>
+                  {% if job.description %}
+                  <span class="job-inline-sub job-inline-desc">
+                    {{ job.description }}
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="job-inline-status">
+                {% if job.status == 'concluido' %}
+                <span class="status-badge status-paid">Concluído</span>
+                {% elif job.status == 'em_andamento' %}
+                <span class="status-badge status-pending">Em andamento</span>
+                {% else %}
+                <span class="status-badge status-neutral">Pendente</span>
+                {% endif %} {% if job.status != 'concluido' %}
+                <div class="job-progress">
+                  <div class="job-progress-top">
+                    <span>Progresso</span>
+                    <span>{{ job.progress }}%</span>
+                  </div>
+                  <div class="job-progress-bar">
+                    <div
+                      class="job-progress-fill"
+                      style="width: {{ job.progress|default:0 }}%;"
+                    ></div>
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- AÇÕES – Editar só aparece na lista -->
+                <div class="job-inline-actions">
+                  <button
+                    type="button"
+                    class="btn-outline-sm js-open-job-edit"
+                    data-id="{{ job.id }}"
+                    data-title="{{ job.title|escapejs }}"
+                    data-client="{{ job.client|escapejs }}"
+                    data-value="{{ job.value|default_if_none:'' }}"
+                    data-status="{{ job.status }}"
+                    data-start-date="{{ job.start_date|date:'Y-m-d' }}"
+                    data-delivery-date="{{ job.delivery_date|date:'Y-m-d' }}"
+                    data-progress="{{ job.progress|default_if_none:0 }}"
+                    data-description="{{ job.description|default_if_none:''|escapejs }}"
+                  >
+                    Editar
+                  </button>
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="jobs-inline-empty">
+            <p>
+              {% if search_query %} Nenhum job corresponde à busca. {% else %}
+              Nenhum job cadastrado ainda. {% endif %}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- MODAL: CADASTRAR NOVO JOB -->
+<div id="modal-job-create-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Cadastrar novo job</h2>
+      <button type="button" class="modal-close" data-close-modal="job-create">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      {% if form.errors %}
+      <div class="form-errors">
+        <p>Verifique os campos destacados abaixo.</p>
+      </div>
+      {% endif %}
+
+      <form method="post" class="job-form">
+        {% csrf_token %}
+
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label for="id_title">Título</label>
+            {{ form.title }}
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="id_client">Cliente</label>
+            {{ form.client }}
+          </div>
+
+          <div class="form-group">
+            <label for="id_value">Valor</label>
+            {{ form.value }}
+          </div>
+
+          <div class="form-group">
+            <label for="id_status">Status</label>
+            {{ form.status }}
+          </div>
+
+          <div class="form-group">
+            <label for="id_start_date">Data de início</label>
+            {{ form.start_date }}
+          </div>
+
+          <div class="form-group">
+            <label for="id_delivery_date">Data de entrega</label>
+            {{ form.delivery_date }}
+          </div>
+
+          <div class="form-group">
+            <label for="id_progress">Progresso (%)</label>
+            {{ form.progress }}
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="id_description">Descrição</label>
+            {{ form.description }}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Salvar Job</button>
+          <button
+            type="button"
+            class="btn btn-outline"
+            data-close-modal="job-create"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR JOB -->
+<div id="modal-job-edit-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Editar job</h2>
+      <button type="button" class="modal-close" data-close-modal="job-edit">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <form method="post" action="{% url 'job_atualizar' %}" class="job-form">
+        {% csrf_token %}
+        <input type="hidden" name="job_id" id="edit-job-id" />
+
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label for="edit-title">Título</label>
+            <input type="text" id="edit-title" name="title" class="input" />
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="edit-client">Cliente</label>
+            <input type="text" id="edit-client" name="client" class="input" />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-value">Valor</label>
+            <input type="text" id="edit-value" name="value" class="input" />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-status">Status</label>
+            <select id="edit-status" name="status" class="input">
+              <option value="pendente">Pendente</option>
+              <option value="em_andamento">Em andamento</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-start-date">Data de início</label>
+            <input
+              type="date"
+              id="edit-start-date"
+              name="start_date"
+              class="input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-delivery-date">Data de entrega</label>
+            <input
+              type="date"
+              id="edit-delivery-date"
+              name="delivery_date"
+              class="input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-progress">Progresso (%)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              id="edit-progress"
+              name="progress"
+              class="input"
+            />
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="edit-description">Descrição</label>
+            <textarea
+              id="edit-description"
+              name="description"
+              rows="3"
+              class="textarea"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-outline"
+            data-close-modal="job-edit"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS dos modais (create + edit) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalCreate = document.getElementById('modal-job-create-overlay');
+    const modalEdit = document.getElementById('modal-job-edit-overlay');
+    const btnOpenCreate = document.getElementById('btn-open-job-create-modal');
+
+    function openModal(modal) {
+      if (modal) modal.classList.add('is-open');
+    }
+
+    function closeModal(modal) {
+      if (modal) modal.classList.remove('is-open');
+    }
+
+    // Cadastrar novo job -> abre modal de criação
+    if (btnOpenCreate && modalCreate) {
+      btnOpenCreate.addEventListener('click', function () {
+        openModal(modalCreate);
+      });
+    }
+
+    // Fechar modal de criação
+    document.querySelectorAll('[data-close-modal="job-create"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalCreate);
+      });
+    });
+
+    // Fechar modal de edição
+    document.querySelectorAll('[data-close-modal="job-edit"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalEdit);
+      });
+    });
+
+    // Fechar clicando fora
+    [modalCreate, modalEdit].forEach(function (overlay) {
+      if (!overlay) return;
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          overlay.classList.remove('is-open');
+        }
+      });
+    });
+
+    // ESC fecha modais
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeModal(modalCreate);
+        closeModal(modalEdit);
+      }
+    });
+
+    // Botões "Editar" da lista -> preenchem o modal e abrem
+    const editButtons = document.querySelectorAll('.js-open-job-edit');
+    const editId = document.getElementById('edit-job-id');
+    const editTitle = document.getElementById('edit-title');
+    const editClient = document.getElementById('edit-client');
+    const editValue = document.getElementById('edit-value');
+    const editStatus = document.getElementById('edit-status');
+    const editStart = document.getElementById('edit-start-date');
+    const editDelivery = document.getElementById('edit-delivery-date');
+    const editProgress = document.getElementById('edit-progress');
+    const editDescription = document.getElementById('edit-description');
+
+    editButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (editId) editId.value = this.dataset.id || '';
+        if (editTitle) editTitle.value = this.dataset.title || '';
+        if (editClient) editClient.value = this.dataset.client || '';
+        if (editValue) editValue.value = this.dataset.value || '';
+        if (editStatus) editStatus.value = this.dataset.status || 'pendente';
+        if (editStart) editStart.value = this.dataset.startDate || '';
+        if (editDelivery) editDelivery.value = this.dataset.deliveryDate || '';
+        if (editProgress) editProgress.value = this.dataset.progress || 0;
+        if (editDescription) editDescription.value = this.dataset.description || '';
+
+        openModal(modalEdit);
+      });
+    });
+
+    // Se o form de criação veio com erros, abre modal de criação automaticamente
+    var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
+    if (hasErrors && modalCreate) {
+      openModal(modalCreate);
+    }
+  });
+</script>
+{% endblock %}

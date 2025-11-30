@@ -24,4 +24,13 @@ urlpatterns = [
 
     # CLIENTES – atualização via modal de detalhes
     path("clientes/atualizar/", views.cliente_atualizar, name="cliente_atualizar"),
+
+    # JOBS – listagem + cadastro
+    path("jobs/", views.jobs, name="jobs"),
+
+    # JOBS – detalhes
+    path("jobs/<int:pk>/", views.job_detalhe, name="job_detalhe"),
+
+    # JOBS – atualização via modal de detalhes
+    path("jobs/atualizar/", views.job_atualizar, name="job_atualizar"),
 ]

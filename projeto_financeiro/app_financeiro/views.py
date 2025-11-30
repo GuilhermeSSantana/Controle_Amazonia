@@ -5,7 +5,8 @@ from django.db.models import Q
 
 from .models import Client
 from .forms import ClientForm
-
+from .models import Job
+from .forms import JobForm
 
 @login_required
 def dashboard(request):
@@ -89,3 +90,88 @@ def cliente_atualizar(request):
     client.save()
 
     return redirect("clientes")
+
+@login_required
+def jobs(request):
+    # Cadastro via POST (modal de "Novo Job")
+    if request.method == "POST":
+        form = JobForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("jobs")
+    else:
+        form = JobForm()
+
+    # Filtros e busca
+    q = (request.GET.get("q") or "").strip()
+    status = request.GET.get("status") or "todos"
+
+    base_qs = Job.objects.all()
+
+    total_count = base_qs.count()
+    andamento_count = base_qs.filter(status="em_andamento").count()
+    concluido_count = base_qs.filter(status="concluido").count()
+    pendente_count = base_qs.filter(status="pendente").count()
+
+    jobs_qs = base_qs
+
+    if q:
+        jobs_qs = jobs_qs.filter(
+            Q(title__icontains=q)
+            | Q(client__icontains=q)
+            | Q(description__icontains=q)
+        )
+
+    if status in ["pendente", "em_andamento", "concluido"]:
+        jobs_qs = jobs_qs.filter(status=status)
+
+    context = {
+        "page_title": "Jobs & Serviços",
+        "page_subtitle": "Gerencie seus projetos e serviços",
+        "active_menu": "jobs",  # pra sidebar marcar o menu correto
+        "form": form,
+        "jobs": jobs_qs.order_by("delivery_date"),
+        "total_count": total_count,
+        "andamento_count": andamento_count,
+        "concluido_count": concluido_count,
+        "pendente_count": pendente_count,
+        "current_status": status,
+        "search_query": q,
+    }
+    return render(request, "jobs/jobs.html", context)
+
+
+@login_required
+def job_detalhe(request, pk):
+    job = get_object_or_404(Job, pk=pk)
+    context = {
+        "job": job,
+        "page_title": f"Job - {job.title}",
+    }
+    return render(request, "jobs/job_detalhe.html", context)
+
+
+@login_required
+@require_POST
+def job_atualizar(request):
+    job_id = request.POST.get("job_id")
+    job = get_object_or_404(Job, pk=job_id)
+
+    job.title = (request.POST.get("title") or "").strip()
+    job.client = (request.POST.get("client") or "").strip()
+    job.value = request.POST.get("value") or job.value
+    job.start_date = request.POST.get("start_date") or job.start_date
+    job.delivery_date = request.POST.get("delivery_date") or job.delivery_date
+    job.status = request.POST.get("status") or job.status
+    job.progress = request.POST.get("progress") or job.progress
+    job.description = (request.POST.get("description") or "").strip()
+
+    # Garantir que progress é int
+    try:
+        job.progress = int(job.progress)
+    except (TypeError, ValueError):
+        job.progress = 0
+
+    job.save()
+
+    return redirect("jobs")
