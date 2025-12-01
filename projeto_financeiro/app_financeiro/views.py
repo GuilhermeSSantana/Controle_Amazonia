@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from decimal import Decimal, InvalidOperation
 
 from .models import Client
 from .forms import ClientForm
@@ -157,21 +158,38 @@ def job_atualizar(request):
     job_id = request.POST.get("job_id")
     job = get_object_or_404(Job, pk=job_id)
 
+    # Campos texto
     job.title = (request.POST.get("title") or "").strip()
     job.client = (request.POST.get("client") or "").strip()
-    job.value = request.POST.get("value") or job.value
-    job.start_date = request.POST.get("start_date") or job.start_date
-    job.delivery_date = request.POST.get("delivery_date") or job.delivery_date
-    job.status = request.POST.get("status") or job.status
-    job.progress = request.POST.get("progress") or job.progress
+    job.status = (request.POST.get("status") or "pendente").strip()
     job.description = (request.POST.get("description") or "").strip()
 
-    # Garantir que progress é int
+    # Datas (input type="date" já manda no formato YYYY-MM-DD)
+    start_date_raw = request.POST.get("start_date") or None
+    delivery_date_raw = request.POST.get("delivery_date") or None
+    job.start_date = start_date_raw or None
+    job.delivery_date = delivery_date_raw or None
+
+    # Progresso
+    progress_raw = request.POST.get("progress") or "0"
     try:
-        job.progress = int(job.progress)
-    except (TypeError, ValueError):
+        job.progress = int(progress_raw)
+    except ValueError:
         job.progress = 0
 
-    job.save()
+    # Valor – normalizar "1.230,50" / "230,00" / "230.00"
+    value_raw = (request.POST.get("value") or "").strip()
+    if value_raw:
+        # remove separador de milhar e converte vírgula decimal para ponto
+        normalized = value_raw.replace('.', '').replace(',', '.')
+        try:
+            job.value = Decimal(normalized)
+        except InvalidOperation:
+            messages.error(
+                request,
+                "O valor deve ser um número válido. Ex: 230,00 ou 230.00."
+            )
+            return redirect("jobs")
 
+    job.save()
     return redirect("jobs")
