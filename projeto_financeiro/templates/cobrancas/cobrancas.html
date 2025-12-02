@@ -1,0 +1,908 @@
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Cobranças{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+  <link rel="stylesheet" href="{% static 'css/jobs.css' %}">
+  <link rel="stylesheet" href="{% static 'css/cobrancas.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page jobs-page">
+  <!-- TOPO -->
+  <div class="top-row">
+    <div class="top-row-main">
+      <h1>Cobranças & Faturas</h1>
+      <p>Controle completo dos seus recebimentos</p>
+    </div>
+    <div class="top-row-actions">
+      <button id="btn-open-cobranca-create-modal" type="button" class="btn btn-primary">
+        <span class="icon">＋</span>
+        <span>Nova cobrança</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="jobs-layout">
+    <!-- CARDS DE ESTATÍSTICA - Layout em Grid -->
+    <section class="cobrancas-stats-grid">
+      <!-- Card: Total de Cobranças -->
+      <div class="card cobranca-stat-card">
+        <div class="cobranca-stat-header">
+          <div class="cobranca-stat-icon stat-primary">
+            <span>📋</span>
+          </div>
+          <div class="cobranca-stat-badge">Total</div>
+        </div>
+        <div class="cobranca-stat-body">
+          <p class="cobranca-stat-value">{{ total_count }}</p>
+          <p class="cobranca-stat-label">Cobranças cadastradas</p>
+        </div>
+      </div>
+
+      <!-- Card: Valor Total -->
+      <div class="card cobranca-stat-card">
+        <div class="cobranca-stat-header">
+          <div class="cobranca-stat-icon stat-info">
+            <span>💰</span>
+          </div>
+          <div class="cobranca-stat-badge badge-info">Faturamento</div>
+        </div>
+        <div class="cobranca-stat-body">
+          <p class="cobranca-stat-value">R$ {{ total_value|floatformat:2 }}</p>
+          <p class="cobranca-stat-label">Valor total em cobranças</p>
+        </div>
+      </div>
+
+      <!-- Card: Recebido -->
+      <div class="card cobranca-stat-card stat-success">
+        <div class="cobranca-stat-header">
+          <div class="cobranca-stat-icon stat-success">
+            <span>✅</span>
+          </div>
+          <div class="cobranca-stat-badge badge-success">Recebido</div>
+        </div>
+        <div class="cobranca-stat-body">
+          <p class="cobranca-stat-value stat-value-success">R$ {{ paid_value|floatformat:2 }}</p>
+          <p class="cobranca-stat-label">
+            {{ paga_count }} cobrança{{ paga_count|pluralize }} paga{{ paga_count|pluralize }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Card: A Receber -->
+      <div class="card cobranca-stat-card stat-warning">
+        <div class="cobranca-stat-header">
+          <div class="cobranca-stat-icon stat-warning">
+            <span>🕒</span>
+          </div>
+          <div class="cobranca-stat-badge badge-warning">Pendente</div>
+        </div>
+        <div class="cobranca-stat-body">
+          <p class="cobranca-stat-value stat-value-warning">R$ {{ to_receive_value|floatformat:2 }}</p>
+          <p class="cobranca-stat-label">
+            {{ pendente_count }} pendente{{ pendente_count|pluralize }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Card: Em Atraso -->
+      <div class="card cobranca-stat-card stat-danger">
+        <div class="cobranca-stat-header">
+          <div class="cobranca-stat-icon stat-danger">
+            <span>⚠️</span>
+          </div>
+          <div class="cobranca-stat-badge badge-danger">Atrasado</div>
+        </div>
+        <div class="cobranca-stat-body">
+          <p class="cobranca-stat-value stat-value-danger">R$ {{ overdue_value|floatformat:2 }}</p>
+          <p class="cobranca-stat-label">
+            {{ vencida_count }} cobrança{{ vencida_count|pluralize }} vencida{{ vencida_count|pluralize }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARD: FILTROS + LISTA -->
+    <section class="card jobs-filters">
+      <div class="card-header">
+        <div class="card-title">Buscar e filtrar cobranças</div>
+        <p class="card-subtitle">
+          Localize cobranças por número, cliente ou job vinculado
+        </p>
+      </div>
+
+      <div class="card-content">
+        <!-- FILTROS -->
+        <form method="get" class="filters-form">
+          <div class="filters-search">
+            <label for="q">Buscar</label>
+            <div class="filters-search-input">
+              <span class="icon">🔍</span>
+              <input
+                type="text"
+                id="q"
+                name="q"
+                placeholder="Número, cliente ou job..."
+                value="{{ search_query|default_if_none:'' }}"
+              />
+            </div>
+          </div>
+
+          <div class="filters-status">
+            <span class="filters-status-label">Status</span>
+            {% with status=current_status|default:"todos" %}
+            <button type="submit" name="status" value="todos"
+              class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
+              Todas ({{ total_count }})
+            </button>
+            <button type="submit" name="status" value="pendente"
+              class="btn btn-chip btn-chip-warning {% if status == 'pendente' %}is-active{% endif %}">
+              Pendentes ({{ pendente_count }})
+            </button>
+            <button type="submit" name="status" value="vencida"
+              class="btn btn-chip btn-chip-danger {% if status == 'vencida' %}is-active{% endif %}">
+              Vencidas ({{ vencida_count }})
+            </button>
+            <button type="submit" name="status" value="paga"
+              class="btn btn-chip btn-chip-success {% if status == 'paga' %}is-active{% endif %}">
+              Pagas ({{ paga_count }})
+            </button>
+            {% endwith %}
+          </div>
+        </form>
+
+        <!-- LISTA DE COBRANÇAS -->
+        <div class="jobs-inline-wrapper">
+          {% if cobrancas %}
+          <ul class="jobs-inline-list">
+            {% for c in cobrancas %}
+            <li class="job-inline-item cobranca-inline-item">
+              <div class="job-inline-main">
+                <!-- Avatar com indicador de status -->
+                <div class="job-avatar cobranca-avatar 
+                  {% if c.status == 'paga' %}avatar-success
+                  {% elif c.status == 'vencida' %}avatar-danger
+                  {% else %}avatar-warning{% endif %}">
+                  <span>
+                    {% if c.status == 'paga' %}✅
+                    {% elif c.status == 'vencida' %}⚠️
+                    {% else %}🕒{% endif %}
+                  </span>
+                </div>
+
+                <div class="job-inline-text">
+                  <!-- Título com número da cobrança -->
+                  <span class="job-inline-title cobranca-title">
+                    <strong>{{ c.number }}</strong>
+                    <span class="cobranca-separator">•</span>
+                    {{ c.client.name }}
+                  </span>
+
+                  <!-- Job vinculado -->
+                  <span class="job-inline-sub cobranca-job">
+                    <span class="cobranca-label">📁 Job:</span>
+                    {% if c.job %}
+                      <strong>{{ c.job.title }}</strong>
+                    {% else %}
+                      <em>(sem job vinculado)</em>
+                    {% endif %}
+                  </span>
+
+                  <!-- Informações de valor e datas -->
+                  <span class="job-inline-sub cobranca-details">
+                    <span class="cobranca-detail-item">
+                      <strong>Valor:</strong> R$ {{ c.value|floatformat:2 }}
+                    </span>
+                    <span class="cobranca-separator">•</span>
+                    <span class="cobranca-detail-item">
+                      <strong>Emissão:</strong> {{ c.issue_date|date:"d/m/Y" }}
+                    </span>
+                    <span class="cobranca-separator">•</span>
+                    <span class="cobranca-detail-item">
+                      <strong>Vencimento:</strong> {{ c.due_date|date:"d/m/Y" }}
+                    </span>
+                  </span>
+
+                  <!-- Data de pagamento (se pago) -->
+                  {% if c.payment_date %}
+                  <span class="job-inline-sub cobranca-paid-date">
+                    <span class="cobranca-check">✓</span>
+                    Pago em: {{ c.payment_date|date:"d/m/Y" }}
+                  </span>
+                  {% endif %}
+
+                  <!-- Observações -->
+                  {% if c.notes %}
+                  <span class="job-inline-sub job-inline-desc cobranca-notes">
+                    <span class="cobranca-label">💬 Obs:</span>
+                    {{ c.notes }}
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Status e Ações -->
+              <div class="job-inline-status">
+                <!-- Badge de Status -->
+                {% if c.status == 'paga' %}
+                  <span class="status-badge status-paid">
+                    <span class="badge-icon">✓</span> Paga
+                  </span>
+                {% elif c.status == 'pendente' %}
+                  <span class="status-badge status-pending">
+                    <span class="badge-icon">⏳</span> Pendente
+                  </span>
+                {% else %}
+                  <span class="status-badge status-overdue">
+                    <span class="badge-icon">!</span> Vencida
+                  </span>
+                {% endif %}
+
+                <!-- Informação extra (dias) -->
+                {% if c.status != 'paga' %}
+                <div class="cobranca-days-info">
+                  {% if c.is_overdue %}
+                    <div class="days-badge days-overdue">
+                      <span class="days-icon">⚠️</span>
+                      <span class="days-text">{{ c.days_overdue }} dia{{ c.days_overdue|pluralize }} de atraso</span>
+                    </div>
+                  {% elif c.days_to_due > 0 %}
+                    <div class="days-badge days-upcoming">
+                      <span class="days-icon">📅</span>
+                      <span class="days-text">Vence em {{ c.days_to_due }} dia{{ c.days_to_due|pluralize }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Ações principais (Editar + 4 ações da cobrança) -->
+                <div class="job-inline-actions cobranca-actions-column">
+                  <!-- Editar (já existia) -->
+                  <button
+                    type="button"
+                    class="btn-outline-sm js-open-cobranca-edit"
+                    data-id="{{ c.id }}"
+                    data-number="{{ c.number }}"
+                    data-client-id="{{ c.client.id }}"
+                    data-job-id="{% if c.job %}{{ c.job.id }}{% endif %}"
+                    data-value="{{ c.value }}"
+                    data-status="{{ c.status }}"
+                    data-issue-date="{{ c.issue_date|date:'Y-m-d' }}"
+                    data-due-date="{{ c.due_date|date:'Y-m-d' }}"
+                    data-payment-date="{% if c.payment_date %}{{ c.payment_date|date:'Y-m-d' }}{% endif %}"
+                    data-notes="{{ c.notes|default_if_none:''|escapejs }}"
+                  >
+                    <span class="btn-icon">✏️</span> Editar
+                  </button>
+
+                  <!-- Linha de ações de cobrança -->
+                  <div class="cobranca-actions-row">
+                    <!-- Ver Detalhes -->
+                    <button
+                      type="button"
+                      class="btn-outline-sm btn-inline js-open-cobranca-detail"
+                      data-id="{{ c.id }}"
+                      data-number="{{ c.number }}"
+                      data-client-name="{{ c.client.name }}"
+                      data-job-title="{% if c.job %}{{ c.job.title }}{% else %}(sem job vinculado){% endif %}"
+                      data-value="{{ c.value|floatformat:2 }}"
+                      data-status="{{ c.status }}"
+                      data-issue-date="{{ c.issue_date|date:'d/m/Y' }}"
+                      data-due-date="{{ c.due_date|date:'d/m/Y' }}"
+                      data-payment-date="{% if c.payment_date %}{{ c.payment_date|date:'d/m/Y' }}{% endif %}"
+                      data-notes="{{ c.notes|default_if_none:''|escapejs }}"
+                      data-days-overdue="{{ c.days_overdue }}"
+                      data-days-to-due="{{ c.days_to_due }}"
+                    >
+                      Ver detalhes
+                    </button>
+
+                    {% if c.status != 'paga' %}
+                    <!-- Marcar como paga (abre modal de edição com status = paga) -->
+                    <button
+                      type="button"
+                      class="btn-outline-sm btn-inline js-mark-cobranca-paid"
+                      data-id="{{ c.id }}"
+                      data-number="{{ c.number }}"
+                      data-client-id="{{ c.client.id }}"
+                      data-job-id="{% if c.job %}{{ c.job.id }}{% endif %}"
+                      data-value="{{ c.value }}"
+                      data-status="{{ c.status }}"
+                      data-issue-date="{{ c.issue_date|date:'Y-m-d' }}"
+                      data-due-date="{{ c.due_date|date:'Y-m-d' }}"
+                      data-payment-date="{% if c.payment_date %}{{ c.payment_date|date:'Y-m-d' }}{% endif %}"
+                      data-notes="{{ c.notes|default_if_none:''|escapejs }}"
+                    >
+                      Marcar como paga
+                    </button>
+
+                    <!-- Lembrar Agora -->
+                    <button
+                      type="button"
+                      class="btn-outline-sm btn-inline js-lembrar-cobranca"
+                      data-number="{{ c.number }}"
+                      data-client-name="{{ c.client.name }}"
+                    >
+                      Lembrar agora
+                    </button>
+
+                    <!-- Enviar por Email -->
+                    <button
+                      type="button"
+                      class="btn-outline-sm btn-inline js-email-cobranca"
+                      data-number="{{ c.number }}"
+                      data-client-name="{{ c.client.name }}"
+                    >
+                      Enviar por email
+                    </button>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="jobs-inline-empty">
+            <div class="empty-icon">💼</div>
+            <p class="empty-title">
+              {% if search_query %}
+              Nenhuma cobrança encontrada
+              {% else %}
+              Nenhuma cobrança cadastrada
+              {% endif %}
+            </p>
+            <p class="empty-subtitle">
+              {% if search_query %}
+              Tente ajustar os filtros de busca
+              {% else %}
+              Comece criando uma nova cobrança
+              {% endif %}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- MODAL: NOVA COBRANÇA -->
+<div id="modal-cobranca-create-overlay" class="modal-overlay">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <span class="modal-icon">💰</span>
+        <div>
+          <h2>Nova cobrança</h2>
+          <p class="modal-subtitle">Preencha os dados da cobrança</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close" data-close-modal="cobranca-create">&times;</button>
+    </div>
+    <div class="modal-body">
+      {% if form.errors %}
+      <div class="form-errors">
+        <span class="error-icon">⚠️</span>
+        <p>Verifique os campos destacados abaixo.</p>
+      </div>
+      {% endif %}
+
+      <form method="post" class="job-form">
+        {% csrf_token %}
+        <div class="form-section">
+          <h3 class="form-section-title">Identificação</h3>
+          <div class="form-grid">
+            <div class="form-group form-group-full">
+              <label for="id_number">Número da cobrança *</label>
+              {{ form.number }}
+              <small class="form-hint">Ex: COB-2024-001</small>
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="id_client">Cliente *</label>
+              {{ form.client }}
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="id_job">Job vinculado (opcional)</label>
+              {{ form.job }}
+              <small class="form-hint">Vincule a um projeto específico</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Valores e Status</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="id_value">Valor *</label>
+              {{ form.value }}
+              <small class="form-hint">Ex: 2500,00</small>
+            </div>
+
+            <div class="form-group">
+              <label for="id_status">Status</label>
+              {{ form.status }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Datas</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="id_issue_date">Data de emissão *</label>
+              {{ form.issue_date }}
+            </div>
+
+            <div class="form-group">
+              <label for="id_due_date">Data de vencimento *</label>
+              {{ form.due_date }}
+            </div>
+
+            <div class="form-group">
+              <label for="id_payment_date">Data de pagamento</label>
+              {{ form.payment_date }}
+              <small class="form-hint">Preencha quando pago</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Informações adicionais</h3>
+          <div class="form-group form-group-full">
+            <label for="id_notes">Observações</label>
+            {{ form.notes }}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" data-close-modal="cobranca-create">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary">
+            <span class="btn-icon">✓</span>
+            Salvar cobrança
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHES DA COBRANÇA -->
+<div id="modal-cobranca-detail-overlay" class="modal-overlay">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <span class="modal-icon">🔎</span>
+        <div>
+          <h2>Detalhes da cobrança</h2>
+          <p class="modal-subtitle">Visualize as informações completas</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close" data-close-modal="cobranca-detail">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="cobranca-detail-grid">
+        <div class="cobranca-detail-section">
+          <h3>Identificação</h3>
+          <p><strong>Número:</strong> <span id="detail-number"></span></p>
+          <p><strong>Cliente:</strong> <span id="detail-client-name"></span></p>
+          <p><strong>Job:</strong> <span id="detail-job-title"></span></p>
+          <p><strong>Status:</strong> <span id="detail-status"></span></p>
+        </div>
+
+        <div class="cobranca-detail-section">
+          <h3>Valores e datas</h3>
+          <p><strong>Valor:</strong> R$ <span id="detail-value"></span></p>
+          <p><strong>Emissão:</strong> <span id="detail-issue-date"></span></p>
+          <p><strong>Vencimento:</strong> <span id="detail-due-date"></span></p>
+          <p><strong>Pagamento:</strong> <span id="detail-payment-date"></span></p>
+          <p><strong>Situação:</strong> <span id="detail-days-info"></span></p>
+        </div>
+      </div>
+
+      <div class="cobranca-detail-notes">
+        <h3>Observações</h3>
+        <p id="detail-notes"></p>
+      </div>
+
+      <div class="cobranca-detail-actions">
+        <!-- Botões pedidos: Ver detalhes (já está aqui), Marcar como Paga, Lembrar Agora, Enviar por Email -->
+        <button type="button" class="btn-outline-sm" id="detail-btn-edit">
+          Editar
+        </button>
+        <button type="button" class="btn-primary" id="detail-btn-mark-paid">
+          Marcar como paga
+        </button>
+        <button type="button" class="btn-outline-sm" id="detail-btn-remind">
+          Lembrar agora
+        </button>
+        <button type="button" class="btn-outline-sm" id="detail-btn-email">
+          Enviar por email
+        </button>
+      </div>
+
+      <!-- Guarda o ID da cobrança no modal de detalhes -->
+      <input type="hidden" id="detail-cobranca-id" />
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR COBRANÇA -->
+<div id="modal-cobranca-edit-overlay" class="modal-overlay">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <span class="modal-icon">✏️</span>
+        <div>
+          <h2>Editar cobrança</h2>
+          <p class="modal-subtitle">Atualize os dados da cobrança</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close" data-close-modal="cobranca-edit">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form method="post" action="{% url 'cobranca_atualizar' %}" class="job-form">
+        {% csrf_token %}
+        <input type="hidden" name="cobranca_id" id="edit-cobranca-id" />
+
+        <div class="form-section">
+          <h3 class="form-section-title">Identificação</h3>
+          <div class="form-grid">
+            <div class="form-group form-group-full">
+              <label for="edit-number">Número da cobrança</label>
+              <input type="text" id="edit-number" name="number" class="input" />
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="edit-client-select">Cliente</label>
+              <select id="edit-client-select" name="client_id" class="input">
+                {% for c in clients %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="edit-job-select">Job vinculado (opcional)</label>
+              <select id="edit-job-select" name="job_id" class="input">
+                <option value="">-- Sem job vinculado --</option>
+                {% for j in jobs %}
+                <option value="{{ j.id }}">{{ j.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Valores e Status</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="edit-value">Valor</label>
+              <input type="text" id="edit-value" name="value" class="input" placeholder="2500,00" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-status">Status</label>
+              <select id="edit-status" name="status" class="input">
+                <option value="pendente">Pendente</option>
+                <option value="vencida">Vencida</option>
+                <option value="paga">Paga</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Datas</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="edit-issue-date">Data de emissão</label>
+              <input type="date" id="edit-issue-date" name="issue_date" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-due-date">Data de vencimento</label>
+              <input type="date" id="edit-due-date" name="due_date" class="input" />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-payment-date">Data de pagamento</label>
+              <input type="date" id="edit-payment-date" name="payment_date" class="input" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">Informações adicionais</h3>
+          <div class="form-group form-group-full">
+            <label for="edit-notes">Observações</label>
+            <textarea id="edit-notes" name="notes" rows="3" class="textarea"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" data-close-modal="cobranca-edit">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary">
+            <span class="btn-icon">✓</span>
+            Salvar alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS MODAIS + PREENCHIMENTO EDIT/DETALHE -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalCreate = document.getElementById('modal-cobranca-create-overlay');
+    const modalEdit = document.getElementById('modal-cobranca-edit-overlay');
+    const modalDetail = document.getElementById('modal-cobranca-detail-overlay');
+    const btnOpenCreate = document.getElementById('btn-open-cobranca-create-modal');
+
+    function openModal(modal) {
+      if (modal) modal.classList.add('is-open');
+    }
+
+    function closeModal(modal) {
+      if (modal) modal.classList.remove('is-open');
+    }
+
+    if (btnOpenCreate && modalCreate) {
+      btnOpenCreate.addEventListener('click', function () {
+        openModal(modalCreate);
+      });
+    }
+
+    document.querySelectorAll('[data-close-modal="cobranca-create"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalCreate);
+      });
+    });
+
+    document.querySelectorAll('[data-close-modal="cobranca-edit"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalEdit);
+      });
+    });
+
+    document.querySelectorAll('[data-close-modal="cobranca-detail"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalDetail);
+      });
+    });
+
+    [modalCreate, modalEdit, modalDetail].forEach(function (overlay) {
+      if (!overlay) return;
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          overlay.classList.remove('is-open');
+        }
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeModal(modalCreate);
+        closeModal(modalEdit);
+        closeModal(modalDetail);
+      }
+    });
+
+    // ---------- EDITAR (já existia, reaproveitado) ----------
+    const editButtons = document.querySelectorAll('.js-open-cobranca-edit');
+    const editId = document.getElementById('edit-cobranca-id');
+    const editNumber = document.getElementById('edit-number');
+    const editClientSelect = document.getElementById('edit-client-select');
+    const editJobSelect = document.getElementById('edit-job-select');
+    const editValue = document.getElementById('edit-value');
+    const editStatus = document.getElementById('edit-status');
+    const editIssue = document.getElementById('edit-issue-date');
+    const editDue = document.getElementById('edit-due-date');
+    const editPayment = document.getElementById('edit-payment-date');
+    const editNotes = document.getElementById('edit-notes');
+
+    function preencherEditComDataset(data) {
+      if (editId) editId.value = data.id || '';
+      if (editNumber) editNumber.value = data.number || '';
+      if (editClientSelect) editClientSelect.value = data.clientId || '';
+      if (editJobSelect) editJobSelect.value = data.jobId || '';
+      if (editValue) editValue.value = data.value || '';
+      if (editStatus) editStatus.value = data.status || 'pendente';
+      if (editIssue) editIssue.value = data.issueDate || '';
+      if (editDue) editDue.value = data.dueDate || '';
+      if (editPayment) editPayment.value = data.paymentDate || '';
+      if (editNotes) editNotes.value = data.notes || '';
+    }
+
+    editButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+        preencherEditComDataset({
+          id: data.id,
+          number: data.number,
+          clientId: data.clientId,
+          jobId: data.jobId,
+          value: data.value,
+          status: data.status,
+          issueDate: data.issueDate,
+          dueDate: data.dueDate,
+          paymentDate: data.paymentDate,
+          notes: data.notes,
+        });
+        openModal(modalEdit);
+      });
+    });
+
+    // ---------- DETALHES ----------
+    let currentDetailData = null;
+
+    const detailId = document.getElementById('detail-cobranca-id');
+    const detailNumber = document.getElementById('detail-number');
+    const detailClientName = document.getElementById('detail-client-name');
+    const detailJobTitle = document.getElementById('detail-job-title');
+    const detailStatus = document.getElementById('detail-status');
+    const detailValue = document.getElementById('detail-value');
+    const detailIssueDate = document.getElementById('detail-issue-date');
+    const detailDueDate = document.getElementById('detail-due-date');
+    const detailPaymentDate = document.getElementById('detail-payment-date');
+    const detailDaysInfo = document.getElementById('detail-days-info');
+    const detailNotes = document.getElementById('detail-notes');
+
+    const detailButtons = document.querySelectorAll('.js-open-cobranca-detail');
+
+    detailButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+        currentDetailData = data;
+
+        if (detailId) detailId.value = data.id || '';
+        if (detailNumber) detailNumber.textContent = data.number || '';
+        if (detailClientName) detailClientName.textContent = data.clientName || '';
+        if (detailJobTitle) detailJobTitle.textContent = data.jobTitle || '(sem job vinculado)';
+        if (detailStatus) detailStatus.textContent = data.status || '';
+        if (detailValue) detailValue.textContent = data.value || '';
+        if (detailIssueDate) detailIssueDate.textContent = data.issueDate || '';
+        if (detailDueDate) detailDueDate.textContent = data.dueDate || '';
+        if (detailPaymentDate) detailPaymentDate.textContent = data.paymentDate || '—';
+        if (detailNotes) detailNotes.textContent = data.notes || 'Nenhuma observação.';
+
+        if (detailDaysInfo) {
+          const overdue = parseInt(data.daysOverdue || '0', 10);
+          const toDue = parseInt(data.daysToDue || '0', 10);
+
+          if (overdue > 0) {
+            detailDaysInfo.textContent = `${overdue} dia(s) de atraso`;
+          } else if (toDue > 0) {
+            detailDaysInfo.textContent = `Vence em ${toDue} dia(s)`;
+          } else {
+            detailDaysInfo.textContent = 'Em dia';
+          }
+        }
+
+        openModal(modalDetail);
+      });
+    });
+
+    // Botões dentro do modal de detalhes
+    const btnDetailEdit = document.getElementById('detail-btn-edit');
+    const btnDetailMarkPaid = document.getElementById('detail-btn-mark-paid');
+    const btnDetailRemind = document.getElementById('detail-btn-remind');
+    const btnDetailEmail = document.getElementById('detail-btn-email');
+
+    if (btnDetailEdit) {
+      btnDetailEdit.addEventListener('click', function () {
+        if (!currentDetailData) return;
+        preencherEditComDataset({
+          id: currentDetailData.id,
+          number: currentDetailData.number,
+          clientId: currentDetailData.clientId,
+          jobId: currentDetailData.jobId,
+          value: currentDetailData.value,
+          status: currentDetailData.status,
+          issueDate: currentDetailData.issueDateIso,
+          dueDate: currentDetailData.dueDateIso,
+          paymentDate: currentDetailData.paymentDateIso,
+          notes: currentDetailData.notes,
+        });
+        closeModal(modalDetail);
+        openModal(modalEdit);
+      });
+    }
+
+    if (btnDetailMarkPaid) {
+      btnDetailMarkPaid.addEventListener('click', function () {
+        // Aqui a ideia é abrir o modal de edição já com status = 'paga'
+        if (!currentDetailData) return;
+        preencherEditComDataset({
+          id: currentDetailData.id,
+          number: currentDetailData.number,
+          clientId: currentDetailData.clientId,
+          jobId: currentDetailData.jobId,
+          value: currentDetailData.value,
+          status: 'paga',
+          issueDate: currentDetailData.issueDateIso,
+          dueDate: currentDetailData.dueDateIso,
+          paymentDate: currentDetailData.paymentDateIso,
+          notes: currentDetailData.notes,
+        });
+        if (editStatus) editStatus.value = 'paga';
+        closeModal(modalDetail);
+        openModal(modalEdit);
+      });
+    }
+
+    if (btnDetailRemind) {
+      btnDetailRemind.addEventListener('click', function () {
+        if (!currentDetailData) return;
+        alert(`Aqui depois você integra o lembrete da cobrança ${currentDetailData.number} (WhatsApp/Email, etc).`);
+      });
+    }
+
+    if (btnDetailEmail) {
+      btnDetailEmail.addEventListener('click', function () {
+        if (!currentDetailData) return;
+        alert(`Aqui depois você integra o envio de email da cobrança ${currentDetailData.number}.`);
+      });
+    }
+
+    // ---------- Botão "Marcar como paga" direto na lista ----------
+    const markPaidButtons = document.querySelectorAll('.js-mark-cobranca-paid');
+    markPaidButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const data = this.dataset;
+        preencherEditComDataset({
+          id: data.id,
+          number: data.number,
+          clientId: data.clientId,
+          jobId: data.jobId,
+          value: data.value,
+          status: 'paga',
+          issueDate: data.issueDate,
+          dueDate: data.dueDate,
+          paymentDate: data.paymentDate,
+          notes: data.notes,
+        });
+        if (editStatus) editStatus.value = 'paga';
+        openModal(modalEdit);
+      });
+    });
+
+    // ---------- Lembrar Agora / Enviar Email direto na lista ----------
+    const lembrarButtons = document.querySelectorAll('.js-lembrar-cobranca');
+    lembrarButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const numero = this.dataset.number || '';
+        const cliente = this.dataset.clientName || '';
+        alert(`Lembrete enviado (simulado) para a cobrança ${numero} do cliente ${cliente}.`);
+      });
+    });
+
+    const emailButtons = document.querySelectorAll('.js-email-cobranca');
+    emailButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const numero = this.dataset.number || '';
+        const cliente = this.dataset.clientName || '';
+        alert(`Envio de email (simulado) para a cobrança ${numero} do cliente ${cliente}.`);
+      });
+    });
+
+    // Se o formulário de criação veio com erros, abre modal automaticamente
+    var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
+    if (hasErrors && modalCreate) {
+      openModal(modalCreate);
+    }
+  });
+</script>
+{% endblock %}

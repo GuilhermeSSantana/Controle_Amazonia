@@ -29,8 +29,18 @@ urlpatterns = [
     path("jobs/", views.jobs, name="jobs"),
 
     # JOBS – detalhes
-    path("jobs/<int:pk>/", views.job_detalhe, name="job_detalhe"),
+    # path("jobs/<int:pk>/", views.job_detalhe, name="job_detalhe"),
 
     # JOBS – atualização via modal de detalhes
     path("jobs/atualizar/", views.job_atualizar, name="job_atualizar"),
+
+    # COBRANÇAS – listagem + cadastro
+    path("cobrancas/", views.cobrancas, name="cobrancas"),
+
+    # COBRANÇAS – atualização via modal de detalhes
+    path("cobrancas/atualizar/", views.cobranca_atualizar, name="cobranca_atualizar"),
+
 ]
+
+
+

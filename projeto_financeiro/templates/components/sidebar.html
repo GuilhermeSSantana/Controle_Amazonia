@@ -15,38 +15,52 @@
 
   <!-- Navegação -->
   <nav class="sidebar-nav">
-    <a href="/dashboard/"
-       class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}is-active{% endif %}">
+    <a
+      href="/dashboard/"
+      class="nav-link {% if request.path == '/dashboard/' or request.path == '/' %}is-active{% endif %}"
+    >
       <span class="icon">🏠</span>
       <span>Dashboard</span>
     </a>
 
-    <a href="/clientes/"
-       class="nav-link {% if request.path|slice:':10' == '/clientes/' %}is-active{% endif %}">
+    <a
+      href="/clientes/"
+      class="nav-link {% if request.path|slice:':10' == '/clientes/' %}is-active{% endif %}"
+    >
       <span class="icon">👥</span>
       <span>Clientes</span>
     </a>
 
-    <a href="/jobs/"
-       class="nav-link {% if request.path|slice:':6' == '/jobs/' %}is-active{% endif %}">
+    <a
+      href="/jobs/"
+      class="nav-link {% if request.path|slice:':6' == '/jobs/' %}is-active{% endif %}"
+    >
       <span class="icon">💼</span>
       <span>Jobs</span>
     </a>
 
-    <a href="/cobrancas/"
-       class="nav-link {% if request.path|slice:':11' == '/cobrancas/' %}is-active{% endif %}">
+    <a
+      href="/cobrancas/"
+      class="nav-link {% if request.path|slice:':11' == '/cobrancas/' %}is-active{% endif %}"
+    >
       <span class="icon">💰</span>
       <span>Cobranças</span>
     </a>
 
-    <a href="/relatorios/"
-       class="nav-link {% if request.path|slice:':11' == '/relatorios/' %}is-active{% endif %}">
+    {# Link de Relatórios desabilitado temporariamente #}
+    <a
+      href="javascript:void(0)"
+      class="nav-link nav-link-disabled"
+      aria-disabled="true"
+    >
       <span class="icon">📊</span>
-      <span>Relatórios</span>
+      <span>Relatórios (em breve)</span>
     </a>
 
-    <a href="/configuracoes/"
-       class="nav-link {% if request.path|slice:':15' == '/configuracoes/' %}is-active{% endif %}">
+    <a
+      href="/configuracoes/"
+      class="nav-link {% if request.path|slice:':15' == '/configuracoes/' %}is-active{% endif %}"
+    >
       <span class="icon">⚙️</span>
       <span>Configurações</span>
     </a>

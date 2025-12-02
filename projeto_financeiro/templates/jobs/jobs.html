@@ -1,32 +1,40 @@
-{% extends "components/layout.html" %} {% load static %} {% block page_title
-%}Jobs {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/clientes.css' %}" />
-{# CSS específico da página de jobs #}
-<link rel="stylesheet" href="{% static 'css/jobs.css' %}" />
-{% endblock %} {% block content %}
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Jobs{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+  <link rel="stylesheet" href="{% static 'css/jobs.css' %}">
+{% endblock %}
+
+{% block content %}
 <div class="page jobs-page">
-  <!-- Topo: título + botão Novo Job (abre modal) -->
   <div class="top-row">
     <div class="top-row-main">
       <h1>Jobs & Serviços</h1>
       <p>Gerencie seus projetos, consultorias e serviços</p>
     </div>
     <div class="top-row-actions">
-      <button
-        id="btn-open-job-create-modal"
-        type="button"
-        class="btn btn-primary"
-      >
+      <button id="btn-open-job-create-modal" type="button" class="btn btn-primary">
         <span class="icon">＋</span>
         <span>Cadastrar novo job</span>
       </button>
     </div>
   </div>
 
-  <!-- Layout principal: stats + card de filtros/lista -->
   <div class="jobs-layout">
-    <!-- Stats -->
     <section class="jobs-stats">
+      <div class="card jobs-stat-card">
+        <div class="jobs-stat-main">
+          <div class="jobs-stat-icon">💰</div>
+          <div>
+            <p class="jobs-stat-label">Valor Total</p>
+            <p class="jobs-stat-value">R$ {{ valor_total|floatformat:2 }}</p>
+          </div>
+        </div>
+      </div>
+
       <div class="card jobs-stat-card">
         <div class="jobs-stat-main">
           <div class="jobs-stat-icon">📂</div>
@@ -68,7 +76,6 @@
       </div>
     </section>
 
-    <!-- Card: filtros + lista -->
     <section class="card jobs-filters">
       <div class="card-header">
         <div class="card-title">Buscar e filtrar jobs</div>
@@ -78,62 +85,39 @@
       </div>
 
       <div class="card-content">
-        <!-- Filtros -->
         <form method="get" class="filters-form">
           <div class="filters-search">
             <label for="q">Buscar</label>
             <div class="filters-search-input">
               <span class="icon">🔍</span>
-              <input
-                type="text"
-                id="q"
-                name="q"
-                placeholder="Título, cliente ou descrição..."
-                value="{{ search_query|default_if_none:'' }}"
-              />
+              <input type="text" id="q" name="q" placeholder="Título, cliente ou descrição..."
+                value="{{ search_query|default_if_none:'' }}" />
             </div>
           </div>
 
           <div class="filters-status">
             <span class="filters-status-label">Status</span>
             {% with status=current_status|default:"todos" %}
-            <button
-              type="submit"
-              name="status"
-              value="todos"
-              class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}"
-            >
+            <button type="submit" name="status" value="todos"
+              class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
               Todos ({{ total_count }})
             </button>
-            <button
-              type="submit"
-              name="status"
-              value="em_andamento"
-              class="btn btn-chip {% if status == 'em_andamento' %}is-active{% endif %}"
-            >
+            <button type="submit" name="status" value="em_andamento"
+              class="btn btn-chip {% if status == 'em_andamento' %}is-active{% endif %}">
               Em andamento ({{ andamento_count }})
             </button>
-            <button
-              type="submit"
-              name="status"
-              value="concluido"
-              class="btn btn-chip {% if status == 'concluido' %}is-active{% endif %}"
-            >
+            <button type="submit" name="status" value="concluido"
+              class="btn btn-chip {% if status == 'concluido' %}is-active{% endif %}">
               Concluídos ({{ concluido_count }})
             </button>
-            <button
-              type="submit"
-              name="status"
-              value="pendente"
-              class="btn btn-chip {% if status == 'pendente' %}is-active{% endif %}"
-            >
+            <button type="submit" name="status" value="pendente"
+              class="btn btn-chip {% if status == 'pendente' %}is-active{% endif %}">
               Pendentes ({{ pendente_count }})
             </button>
             {% endwith %}
           </div>
         </form>
 
-        <!-- Lista de jobs -->
         <div class="jobs-inline-wrapper">
           {% if jobs %}
           <ul class="jobs-inline-list">
@@ -146,7 +130,7 @@
                 <div class="job-inline-text">
                   <span class="job-inline-title">{{ job.title }}</span>
                   <span class="job-inline-sub">
-                    Cliente: {{ job.client }}
+                    Cliente: {{ job.client.name }}
                   </span>
                   <span class="job-inline-sub">
                     Valor: R$ {{ job.value }} • Início: {{ job.start_date }} •
@@ -167,36 +151,28 @@
                 <span class="status-badge status-pending">Em andamento</span>
                 {% else %}
                 <span class="status-badge status-neutral">Pendente</span>
-                {% endif %} {% if job.status != 'concluido' %}
+                {% endif %}
+                
+                {% if job.status != 'concluido' %}
                 <div class="job-progress">
                   <div class="job-progress-top">
                     <span>Progresso</span>
                     <span>{{ job.progress }}%</span>
                   </div>
                   <div class="job-progress-bar">
-                    <div
-                      class="job-progress-fill"
-                      style="width: {{ job.progress|default:0 }}%;"
-                    ></div>
+                    <div class="job-progress-fill" style="width: {{ job.progress|default:0 }}%;"></div>
                   </div>
                 </div>
                 {% endif %}
 
-                <!-- AÇÕES – Editar só aparece na lista -->
                 <div class="job-inline-actions">
-                  <button
-                    type="button"
-                    class="btn-outline-sm js-open-job-edit"
-                    data-id="{{ job.id }}"
-                    data-title="{{ job.title|escapejs }}"
-                    data-client="{{ job.client|escapejs }}"
-                    data-value="{{ job.value|default_if_none:'' }}"
-                    data-status="{{ job.status }}"
+                  <button type="button" class="btn-outline-sm js-open-job-edit" data-id="{{ job.id }}"
+                    data-title="{{ job.title|escapejs }}" data-client-id="{{ job.client.id }}"
+                    data-value="{{ job.value|default_if_none:'' }}" data-status="{{ job.status }}"
                     data-start-date="{{ job.start_date|date:'Y-m-d' }}"
                     data-delivery-date="{{ job.delivery_date|date:'Y-m-d' }}"
                     data-progress="{{ job.progress|default_if_none:0 }}"
-                    data-description="{{ job.description|default_if_none:''|escapejs }}"
-                  >
+                    data-description="{{ job.description|default_if_none:''|escapejs }}">
                     Editar
                   </button>
                 </div>
@@ -207,8 +183,11 @@
           {% else %}
           <div class="jobs-inline-empty">
             <p>
-              {% if search_query %} Nenhum job corresponde à busca. {% else %}
-              Nenhum job cadastrado ainda. {% endif %}
+              {% if search_query %}
+              Nenhum job corresponde à busca.
+              {% else %}
+              Nenhum job cadastrado ainda.
+              {% endif %}
             </p>
           </div>
           {% endif %}
@@ -281,11 +260,7 @@
 
         <div class="form-actions">
           <button type="submit" class="btn-primary">Salvar Job</button>
-          <button
-            type="button"
-            class="btn btn-outline"
-            data-close-modal="job-create"
-          >
+          <button type="button" class="btn btn-outline" data-close-modal="job-create">
             Cancelar
           </button>
         </div>
@@ -314,9 +289,14 @@
             <input type="text" id="edit-title" name="title" class="input" />
           </div>
 
+          <!-- ✅ CORREÇÃO: agora é um SELECT com ID único -->
           <div class="form-group form-group-full">
-            <label for="edit-client">Cliente</label>
-            <input type="text" id="edit-client" name="client" class="input" />
+            <label for="edit-client-select">Cliente</label>
+            <select id="edit-client-select" name="client_id" class="input">
+              {% for c in clients %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
           </div>
 
           <div class="form-group">
@@ -335,53 +315,27 @@
 
           <div class="form-group">
             <label for="edit-start-date">Data de início</label>
-            <input
-              type="date"
-              id="edit-start-date"
-              name="start_date"
-              class="input"
-            />
+            <input type="date" id="edit-start-date" name="start_date" class="input" />
           </div>
 
           <div class="form-group">
             <label for="edit-delivery-date">Data de entrega</label>
-            <input
-              type="date"
-              id="edit-delivery-date"
-              name="delivery_date"
-              class="input"
-            />
+            <input type="date" id="edit-delivery-date" name="delivery_date" class="input" />
           </div>
 
           <div class="form-group">
             <label for="edit-progress">Progresso (%)</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              id="edit-progress"
-              name="progress"
-              class="input"
-            />
+            <input type="number" min="0" max="100" id="edit-progress" name="progress" class="input" />
           </div>
 
           <div class="form-group form-group-full">
             <label for="edit-description">Descrição</label>
-            <textarea
-              id="edit-description"
-              name="description"
-              rows="3"
-              class="textarea"
-            ></textarea>
+            <textarea id="edit-description" name="description" rows="3" class="textarea"></textarea>
           </div>
         </div>
 
         <div class="form-actions">
-          <button
-            type="button"
-            class="btn btn-outline"
-            data-close-modal="job-edit"
-          >
+          <button type="button" class="btn btn-outline" data-close-modal="job-edit">
             Cancelar
           </button>
           <button type="submit" class="btn-primary">Salvar alterações</button>
@@ -391,7 +345,6 @@
   </div>
 </div>
 
-<!-- JS dos modais (create + edit) -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const modalCreate = document.getElementById('modal-job-create-overlay');
@@ -406,28 +359,24 @@
       if (modal) modal.classList.remove('is-open');
     }
 
-    // Cadastrar novo job -> abre modal de criação
     if (btnOpenCreate && modalCreate) {
       btnOpenCreate.addEventListener('click', function () {
         openModal(modalCreate);
       });
     }
 
-    // Fechar modal de criação
     document.querySelectorAll('[data-close-modal="job-create"]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         closeModal(modalCreate);
       });
     });
 
-    // Fechar modal de edição
     document.querySelectorAll('[data-close-modal="job-edit"]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         closeModal(modalEdit);
       });
     });
 
-    // Fechar clicando fora
     [modalCreate, modalEdit].forEach(function (overlay) {
       if (!overlay) return;
       overlay.addEventListener('click', function (e) {
@@ -437,7 +386,6 @@
       });
     });
 
-    // ESC fecha modais
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         closeModal(modalCreate);
@@ -445,11 +393,11 @@
       }
     });
 
-    // Botões "Editar" da lista -> preenchem o modal e abrem
+    // ✅ CORREÇÃO: Agora preenche o SELECT corretamente
     const editButtons = document.querySelectorAll('.js-open-job-edit');
     const editId = document.getElementById('edit-job-id');
     const editTitle = document.getElementById('edit-title');
-    const editClient = document.getElementById('edit-client');
+    const editClientSelect = document.getElementById('edit-client-select');
     const editValue = document.getElementById('edit-value');
     const editStatus = document.getElementById('edit-status');
     const editStart = document.getElementById('edit-start-date');
@@ -461,7 +409,10 @@
       btn.addEventListener('click', function () {
         if (editId) editId.value = this.dataset.id || '';
         if (editTitle) editTitle.value = this.dataset.title || '';
-        if (editClient) editClient.value = this.dataset.client || '';
+        
+        // ✅ Agora seleciona o cliente correto no SELECT
+        if (editClientSelect) editClientSelect.value = this.dataset.clientId || '';
+        
         if (editValue) editValue.value = this.dataset.value || '';
         if (editStatus) editStatus.value = this.dataset.status || 'pendente';
         if (editStart) editStart.value = this.dataset.startDate || '';
@@ -473,7 +424,6 @@
       });
     });
 
-    // Se o form de criação veio com erros, abre modal de criação automaticamente
     var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
     if (hasErrors && modalCreate) {
       openModal(modalCreate);
