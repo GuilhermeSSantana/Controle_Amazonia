@@ -1,0 +1,18 @@
+#ignorar o sqlite db
+db.sqlite3
+#ignorar arquivos estáticos coletados
+staticfiles/
+#ignorar arquivos de mídia
+media/
+#ignorar arquivos de configuração do sistema operacional
+.DS_Store
+Thumbs.db
+#ignorar arquivos de teste
+test_*.py
+tests.py
+#ignorar arquivos temporários
+*.tmp
+*.temp
+#ignorar arquivos de backup
+*~
+*.bak
