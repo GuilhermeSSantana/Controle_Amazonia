@@ -1,28 +1,311 @@
-{# templates/components/layout.html #}
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>{% block page_title %}Dashboard{% endblock %} - Financeiro Amazonas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block page_title %}Sistema Financeiro{% endblock %} - Amazônia Engenharia
+    </title>
+    
+    <!-- CSS Base - SEMPRE primeiro -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}" />
+    
+    <!-- CSS específico de cada página -->
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- Sidebar -->
+      <aside class="app-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo-wrap">
+            <div class="sidebar-logo-icon">
+              <span class="icon">🌿</span>
+            </div>
+            <div class="sidebar-logo-text">
+              <div class="sidebar-logo-title">Amazônia</div>
+              <div class="sidebar-logo-subtitle">Engenharia</div>
+            </div>
+          </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+          <a
+            href="{% url 'dashboard' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}"
+          >
+            <span class="icon">🏠</span>
+            <span>Dashboard</span>
+          </a>
+          <a
+            href="{% url 'clientes' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'clientes' %}is-active{% endif %}"
+          >
+            <span class="icon">👥</span>
+            <span>Clientes</span>
+          </a>
+          <a
+            href="{% url 'jobs' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'jobs' %}is-active{% endif %}"
+          >
+            <span class="icon">💼</span>
+            <span>Jobs</span>
+          </a>
+          <a
+            href="{% url 'cobrancas' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'cobrancas' %}is-active{% endif %}"
+          >
+            <span class="icon">💰</span>
+            <span>Cobranças</span>
+          </a>
+          {% if user.is_staff %}
+          <a
+            href="{% url 'usuarios' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'usuarios' %}is-active{% endif %}"
+          >
+            <span class="icon">👤</span>
+            <span>Usuários</span>
+          </a>
+          {% endif %}
+          <a
+            href="{% url 'configuracoes' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'configuracoes' %}is-active{% endif %}"
+          >
+            <span class="icon">⚙️</span>
+            <span>Configurações</span>
+          </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+          <!-- Botão de Logout -->
+          <form method="post" action="{% url 'logout' %}" style="width: 100%; margin-bottom: 12px;">
+            {% csrf_token %}
+            <button type="submit" class="nav-link" style="
+              width: 100%;
+              text-align: left;
+              background: none;
+              border: none;
+              cursor: pointer;
+              color: #ef4444;
+            ">
+              <span class="icon">🚪</span>
+              <span>Sair do Sistema</span>
+            </button>
+          </form>
+          
+          <div class="sidebar-footer-box">
+            <p class="sidebar-footer-title">Sistema de Cobrança</p>
+            <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
+          </div>
+        </div>
+      </aside>
 
-  <!-- Design system + layout padrão da aplicação -->
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+      <!-- Main content -->
+      <div class="app-main">
+        <!-- Top bar -->
+        <header class="app-header">
+          <div class="header-left">
+            <h1 class="header-title">{% block header_title %}Dashboard{% endblock %}</h1>
+            <p class="header-subtitle">{% block header_subtitle %}Visão geral do sistema{% endblock %}</p>
+          </div>
+          
+          <div class="header-right">
+            <!-- Notificações -->
+            <div class="notifications-wrapper" style="position: relative;">
+              <button
+                class="btn-header"
+                id="notifications-bell"
+                type="button"
+                style="position: relative;"
+              >
+                <span class="icon">🔔</span>
+                {% if unread_count > 0 %}
+                <span class="badge-dot"></span>
+                {% endif %}
+              </button>
 
-  {% block extra_head %}{% endblock %}
-</head>
-<body>
-<div class="app-shell">
-  {% include 'components/sidebar.html' %}
+              <div class="notifications-dropdown" id="notifications-dropdown" style="
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 8px;
+                width: 380px;
+                max-height: 500px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                display: none;
+                z-index: 1000;
+                overflow: hidden;
+              ">
+                <div style="padding: 16px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #111827;">Notificações</h3>
+                  {% if unread_count > 0 %}
+                  <form
+                    method="post"
+                    action="{% url 'notificacao_mark_all_read' %}"
+                    style="display: inline"
+                  >
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}" />
+                    <button type="submit" style="
+                      background: none;
+                      border: none;
+                      color: #3b82f6;
+                      cursor: pointer;
+                      font-size: 13px;
+                      padding: 4px 8px;
+                      border-radius: 4px;
+                      transition: all 0.2s;
+                    ">
+                      Marcar todas como lidas
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
 
-  <div class="app-main">
-    {% include 'components/header.html' with title=page_title subtitle=page_subtitle %}
-    <main class="app-content">
-      {% block content %}{% endblock %}
-    </main>
-  </div>
-</div>
-</body>
+                <div style="max-height: 400px; overflow-y: auto;">
+                  {% if recent_notifications %}
+                    {% for notification in recent_notifications %}
+                    <div
+                      style="
+                        padding: 12px 16px;
+                        border-bottom: 1px solid #f3f4f6;
+                        transition: all 0.2s;
+                        cursor: pointer;
+                        {% if not notification.is_read %}background: #eff6ff;{% endif %}
+                      "
+                      onclick="window.location.href='{{ notification.link|default:'#' }}'"
+                    >
+                      <span style="
+                        display: inline-block;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        margin-bottom: 4px;
+                        {% if notification.type == 'cobranca_vencendo' %}
+                        background: #fef3c7; color: #92400e;
+                        {% elif notification.type == 'cobranca_vencida' %}
+                        background: #fee2e2; color: #991b1b;
+                        {% else %}
+                        background: #dbeafe; color: #1e40af;
+                        {% endif %}
+                      ">
+                        {{ notification.get_type_display }}
+                      </span>
+                      <div style="font-weight: 600; color: #111827; margin: 4px 0; font-size: 14px;">
+                        {{ notification.title }}
+                      </div>
+                      <div style="color: #6b7280; font-size: 13px; margin: 4px 0;">
+                        {{ notification.message }}
+                      </div>
+                      <div style="color: #9ca3af; font-size: 11px; margin-top: 4px;">
+                        {{ notification.created_at|timesince }} atrás
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                  <div style="padding: 40px 20px; text-align: center; color: #9ca3af;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">🔭</div>
+                    <p>Nenhuma notificação</p>
+                  </div>
+                  {% endif %}
+                </div>
+
+                {% if recent_notifications %}
+                <div style="padding: 12px 16px; border-top: 1px solid #e5e7eb; text-align: center;">
+                  <a
+                    href="{% url 'notificacoes_list' %}"
+                    style="color: #3b82f6; text-decoration: none; font-size: 13px; font-weight: 500;"
+                  >
+                    Ver todas as notificações
+                  </a>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="user-chip">
+              <span class="icon">👤</span>
+              <span class="user-name">{{ user.username }}</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div style="padding: 16px 24px;">
+          {% for message in messages %}
+          <div style="
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            {% if message.tags == 'success' %}
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+            {% elif message.tags == 'error' %}
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+            {% elif message.tags == 'warning' %}
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+            {% else %}
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+            {% endif %}
+          ">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page content -->
+        <div class="app-content">
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Sistema de notificações
+      document.addEventListener("DOMContentLoaded", function () {
+        const bell = document.getElementById("notifications-bell");
+        const dropdown = document.getElementById("notifications-dropdown");
+
+        if (bell && dropdown) {
+          bell.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const isOpen = dropdown.style.display === "block";
+            dropdown.style.display = isOpen ? "none" : "block";
+          });
+
+          // Fechar ao clicar fora
+          document.addEventListener("click", function (e) {
+            if (!dropdown.contains(e.target) && e.target !== bell) {
+              dropdown.style.display = "none";
+            }
+          });
+        }
+
+        // Auto-hide messages after 5 seconds
+        const messages = document.querySelectorAll("[style*='padding: 12px 16px']");
+        messages.forEach(function (message) {
+          setTimeout(function () {
+            message.style.opacity = "0";
+            message.style.transition = "opacity 0.3s";
+            setTimeout(function () {
+              message.remove();
+            }, 300);
+          }, 5000);
+        });
+      });
+    </script>
+  </body>
 </html>

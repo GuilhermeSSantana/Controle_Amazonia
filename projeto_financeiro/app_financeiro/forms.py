@@ -1,5 +1,7 @@
 from django import forms
-from .models import Client, Job, Cobranca
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from .models import Client, Job, Cobranca, SystemConfig
 from decimal import Decimal, InvalidOperation
 
 
@@ -45,7 +47,6 @@ class JobForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={"class": "input", "placeholder": "Título do job"}
             ),
-            # 🔽 select com os clientes já cadastrados
             "client": forms.Select(attrs={"class": "select"}),
             "value": forms.NumberInput(
                 attrs={"class": "input", "step": "0.01", "min": "0"}
@@ -67,7 +68,6 @@ class JobForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Só mostra clientes ativos e em ordem alfabética
         self.fields["client"].queryset = Client.objects.filter(
             is_active=True
         ).order_by("name")
@@ -77,6 +77,7 @@ class JobForm(forms.ModelForm):
         if progress < 0 or progress > 100:
             raise forms.ValidationError("O progresso deve estar entre 0 e 100%.")
         return progress
+
 
 class CobrancaForm(forms.ModelForm):
     client = forms.ModelChoiceField(
@@ -90,7 +91,6 @@ class CobrancaForm(forms.ModelForm):
         required=False,
         help_text="Vincule a um job/projeto, se quiser.",
     )
-    # valor como texto, pra aceitar 230,00
     value = forms.CharField(label="Valor")
 
     class Meta:
@@ -132,3 +132,77 @@ class CobrancaForm(forms.ModelForm):
                 "Informe um valor numérico válido. Ex: 2500,00"
             )
 
+
+class SystemConfigForm(forms.ModelForm):
+    class Meta:
+        model = SystemConfig
+        fields = [
+            'company_name',
+            'company_cnpj',
+            'company_email',
+            'company_phone',
+            'company_address',
+            'whatsapp_enabled',
+            'evolution_api_url',
+            'evolution_api_key',
+            'evolution_instance_name',
+            'evolution_sandbox',
+            'reminder_days_before',
+            'reminder_days_after',
+            'reminder_on_due_date',
+            'reminder_include_weekends',
+            'reminder_business_hours_only',
+            'template_before',
+            'template_due',
+            'template_after',
+        ]
+        widgets = {
+            'company_name': forms.TextInput(attrs={'class': 'input'}),
+            'company_cnpj': forms.TextInput(attrs={'class': 'input'}),
+            'company_email': forms.EmailInput(attrs={'class': 'input'}),
+            'company_phone': forms.TextInput(attrs={'class': 'input'}),
+            'company_address': forms.Textarea(attrs={'class': 'textarea', 'rows': 2}),
+            'whatsapp_enabled': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+            'evolution_api_url': forms.TextInput(attrs={'class': 'input', 'placeholder': 'https://sua-instancia-evolution.com'}),
+            'evolution_api_key': forms.PasswordInput(attrs={'class': 'input', 'placeholder': 'Chave secreta'}),
+            'evolution_instance_name': forms.TextInput(attrs={'class': 'input', 'placeholder': 'amazonia-engenharia'}),
+            'evolution_sandbox': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+            'reminder_days_before': forms.NumberInput(attrs={'class': 'input', 'min': 0, 'max': 30}),
+            'reminder_days_after': forms.NumberInput(attrs={'class': 'input', 'min': 0, 'max': 30}),
+            'reminder_on_due_date': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+            'reminder_include_weekends': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+            'reminder_business_hours_only': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+            'template_before': forms.Textarea(attrs={'class': 'textarea', 'rows': 4}),
+            'template_due': forms.Textarea(attrs={'class': 'textarea', 'rows': 4}),
+            'template_after': forms.Textarea(attrs={'class': 'textarea', 'rows': 4}),
+        }
+
+
+class UserCreateForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'input', 'placeholder': 'email@exemplo.com'})
+    )
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'input', 'placeholder': 'Nome'})
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'input', 'placeholder': 'Sobrenome'})
+    )
+    
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'is_staff']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'input', 'placeholder': 'nomedeusuario'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'checkbox'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({'class': 'input'})
+        self.fields['password2'].widget.attrs.update({'class': 'input'})

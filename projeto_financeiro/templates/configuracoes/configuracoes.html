@@ -1,0 +1,327 @@
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Configurações{% endblock %}
+
+{% block header_title %}Configurações{% endblock %}
+{% block header_subtitle %}Gerencie os parâmetros do sistema{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/configuracoes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+
+  <!-- Card: Dados da Empresa -->
+  <section class="card config-card">
+    <div class="card-header">
+      <div class="config-card-title">
+        <div class="config-icon">🏢</div>
+        <div>
+          <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">Dados da Empresa</h2>
+          <p class="card-subtitle">Informação básica usada em cobranças e relatórios</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-content">
+      <div class="settings-alert info">
+        <span class="alert-icon">ℹ️</span>
+        <span>Em breve será possível editar essas informações diretamente pelo sistema.</span>
+      </div>
+
+      <form method="post" class="settings-form">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="id_company_name">Razão Social</label>
+            <input
+              type="text"
+              id="id_company_name"
+              name="company_name"
+              class="input"
+              value="Amazônia Engenharia"
+              disabled
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="id_company_cnpj">CNPJ</label>
+            <input
+              type="text"
+              id="id_company_cnpj"
+              name="company_cnpj"
+              class="input"
+              value="12.345.678/0001-90"
+              disabled
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="id_company_email">Email Corporativo</label>
+            <input
+              type="email"
+              id="id_company_email"
+              name="company_email"
+              class="input"
+              value="admin@amazoniaengenharia.com"
+              disabled
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="id_company_phone">Telefone</label>
+            <input
+              type="text"
+              id="id_company_phone"
+              name="company_phone"
+              class="input"
+              value="(92) 99999-9999"
+              disabled
+            >
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="id_company_address">Endereço Completo</label>
+            <textarea
+              id="id_company_address"
+              name="company_address"
+              rows="2"
+              class="textarea"
+              disabled
+            >Rua das Palmeiras, 123 - Manaus, AM</textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Card: WhatsApp / Evolution API -->
+  <section class="card config-card">
+    <div class="card-header">
+      <div class="config-card-title">
+        <div class="config-icon">💬</div>
+        <div>
+          <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">WhatsApp (Evolution API)</h2>
+          <p class="card-subtitle">Integração para envio automático de lembretes</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-content">
+      <div class="config-disabled-banner">
+        <span class="config-disabled-icon">🔧</span>
+        <span>Integração em desenvolvimento</span>
+      </div>
+
+      <div class="settings-toggle-row">
+        <div>
+          <p class="settings-toggle-title">Ativar lembretes por WhatsApp</p>
+          <p class="settings-toggle-subtitle">
+            Enviar mensagens automáticas para clientes com base nas cobranças
+          </p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" disabled>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-alert warning">
+        <span class="alert-icon">⚠️</span>
+        <span>Campos exibidos apenas para visualização. A funcionalidade será ativada em breve.</span>
+      </div>
+
+      <div class="config-fieldset-disabled">
+        <div class="form-grid">
+          <div class="form-group form-group-full">
+            <label for="id_api_url">URL da Evolution API</label>
+            <input
+              type="text"
+              id="id_api_url"
+              name="api_url"
+              class="input"
+              placeholder="https://sua-instancia-evolution.com"
+              disabled
+            >
+            <span class="form-hint">Endereço completo da sua instância Evolution</span>
+          </div>
+
+          <div class="form-group">
+            <label for="id_api_key">Chave da API</label>
+            <input
+              type="password"
+              id="id_api_key"
+              name="api_key"
+              class="input"
+              placeholder="••••••••••••••••"
+              disabled
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="id_instance_name">Nome da Instância</label>
+            <input
+              type="text"
+              id="id_instance_name"
+              name="instance_name"
+              class="input"
+              placeholder="amazonia-engenharia"
+              disabled
+            >
+          </div>
+
+          <div class="form-group-inline form-group-full">
+            <label class="checkbox-inline">
+              <input type="checkbox" disabled>
+              <span>Modo de teste (sandbox)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card: Lembretes Automáticos -->
+  <section class="card config-card">
+    <div class="card-header">
+      <div class="config-card-title">
+        <div class="config-icon">⏰</div>
+        <div>
+          <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">Lembretes Automáticos</h2>
+          <p class="card-subtitle">Regras de envio de mensagens antes e depois do vencimento</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-content">
+      <div class="config-disabled-banner">
+        <span class="config-disabled-icon">🔧</span>
+        <span>Automação ainda não está ativa</span>
+      </div>
+
+      <div class="config-fieldset-disabled">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="id_days_before">Dias antes do vencimento</label>
+            <input
+              type="number"
+              id="id_days_before"
+              class="input"
+              value="3"
+              min="0"
+              max="30"
+              disabled
+            >
+            <span class="form-hint">Enviar lembrete X dias antes</span>
+          </div>
+
+          <div class="form-group">
+            <label for="id_days_after">Dias após vencimento</label>
+            <input
+              type="number"
+              id="id_days_after"
+              class="input"
+              value="5"
+              min="0"
+              max="30"
+              disabled
+            >
+            <span class="form-hint">Enviar cobrança X dias depois</span>
+          </div>
+
+          <div class="form-group-inline">
+            <label class="checkbox-inline">
+              <input type="checkbox" checked disabled>
+              <span>Enviar no dia do vencimento</span>
+            </label>
+          </div>
+
+          <div class="form-group-inline">
+            <label class="checkbox-inline">
+              <input type="checkbox" disabled>
+              <span>Incluir finais de semana</span>
+            </label>
+          </div>
+
+          <div class="form-group-inline form-group-full">
+            <label class="checkbox-inline">
+              <input type="checkbox" checked disabled>
+              <span>Apenas horário comercial (08h às 18h)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card: Templates de Mensagem -->
+  <section class="card config-card">
+    <div class="card-header">
+      <div class="config-card-title">
+        <div class="config-icon">✉️</div>
+        <div>
+          <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">Templates de Mensagem</h2>
+          <p class="card-subtitle">Modelos usados nos lembretes enviados aos clientes</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-content">
+      <div class="settings-alert info">
+        <span class="alert-icon">💡</span>
+        <span><strong>Variáveis disponíveis:</strong> {nome}, {valor}, {vencimento}, {dias_restantes}</span>
+      </div>
+
+      <div class="config-fieldset-disabled">
+        <div class="form-group">
+          <label for="id_template_before">Antes do vencimento</label>
+          <textarea
+            id="id_template_before"
+            rows="4"
+            class="textarea"
+            disabled
+          >Olá {nome}! 🌿
+Lembrete amigável: sua fatura no valor de {valor} vence em {dias_restantes} dia(s) ({vencimento}).
+
+Para evitar transtornos, realize o pagamento até a data de vencimento.
+
+*Amazônia Engenharia*</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="id_template_due">No dia do vencimento</label>
+          <textarea
+            id="id_template_due"
+            rows="4"
+            class="textarea"
+            disabled
+          >Olá {nome}! 📅
+Sua fatura no valor de {valor} vence hoje ({vencimento}).
+
+Por favor, realize o pagamento para manter seus serviços em dia.
+
+*Amazônia Engenharia*</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="id_template_after">Após vencimento</label>
+          <textarea
+            id="id_template_after"
+            rows="4"
+            class="textarea"
+            disabled
+          >Olá {nome}! ⚠️
+Sua fatura no valor de {valor} está vencida desde {vencimento}.
+
+Entre em contato conosco para regularizar a situação.
+
+*Amazônia Engenharia*</textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

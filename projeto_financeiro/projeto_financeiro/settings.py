@@ -1,17 +1,24 @@
-"""
-Django settings for projeto_financeiro project.
-"""
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES = [
     {
-        'DIRS': [BASE_DIR / 'templates' / 'static'],
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],  # ou [os.path.join(BASE_DIR, 'templates')]
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'app_financeiro.context_processors.notifications_processor',  # ← Certifique-se que está aqui
+            ],
+        },
     },
 ]
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
 

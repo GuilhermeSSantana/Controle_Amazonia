@@ -1,33 +1,118 @@
 from decimal import Decimal, InvalidOperation
+from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q, Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.contrib.auth.models import User
 
-from .models import Client, Job, Cobranca
-from .forms import ClientForm, JobForm, CobrancaForm
+from .models import Client, Job, Cobranca, Notification, SystemConfig
+from .forms import ClientForm, JobForm, CobrancaForm, SystemConfigForm, UserCreateForm
+
+
+def get_base_context(request):
+    """Contexto base para todas as páginas"""
+    context = {}
+    
+    if request.user.is_authenticated:
+        # Notificações não lidas
+        unread_notifications = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        )
+        context['unread_count'] = unread_notifications.count()
+        context['recent_notifications'] = Notification.objects.filter(
+            user=request.user
+        )[:5]
+    
+    return context
 
 
 @login_required
 def dashboard(request):
-    context = {
+    """Dashboard principal com métricas e resumos"""
+    today = timezone.localdate()
+    
+    # Métricas básicas
+    total_clientes = Client.objects.filter(is_active=True).count()
+    jobs_ativos = Job.objects.filter(status__in=['pendente', 'em_andamento']).count()
+    
+    # Faturamento mensal (cobranças pagas no mês atual)
+    faturamento_mensal = Cobranca.objects.filter(
+        status='paga',
+        payment_date__year=today.year,
+        payment_date__month=today.month
+    ).aggregate(total=Sum('value'))['total'] or Decimal('0.00')
+    
+    # Faturamento mês anterior (para calcular crescimento)
+    mes_anterior = today.replace(day=1) - timedelta(days=1)
+    faturamento_mes_anterior = Cobranca.objects.filter(
+        status='paga',
+        payment_date__year=mes_anterior.year,
+        payment_date__month=mes_anterior.month
+    ).aggregate(total=Sum('value'))['total'] or Decimal('0.00')
+    
+    # Cálculo de crescimento
+    crescimento = 0
+    if faturamento_mes_anterior > 0:
+        crescimento = ((faturamento_mensal - faturamento_mes_anterior) / faturamento_mes_anterior) * 100
+    
+    # Cobranças vencidas
+    cobrancas_vencidas = Cobranca.objects.filter(
+        status='vencida'
+    ).count()
+    
+    # Resumo semanal
+    semana_inicio = today
+    semana_fim = today + timedelta(days=7)
+    
+    vencem_semana = Cobranca.objects.filter(
+        due_date__gte=semana_inicio,
+        due_date__lte=semana_fim,
+        status='pendente'
+    ).count()
+    
+    vencidas = Cobranca.objects.filter(status='vencida').count()
+    em_dia = Cobranca.objects.filter(status='paga').count()
+    
+    # Cobranças recentes
+    cobrancas_recentes = Cobranca.objects.select_related(
+        'client', 'job'
+    ).order_by('-created_at')[:5]
+    
+    context = get_base_context(request)
+    context.update({
         'page_title': 'Dashboard',
-        'page_subtitle': 'Visão geral do seu negócio',
-    }
+        'total_clientes': total_clientes,
+        'jobs_ativos': jobs_ativos,
+        'faturamento_mensal': faturamento_mensal,
+        'crescimento': round(crescimento, 2),
+        'cobrancas_vencidas': cobrancas_vencidas,
+        'vencem_semana': vencem_semana,
+        'vencidas': vencidas,
+        'em_dia': em_dia,
+        'cobrancas_recentes': cobrancas_recentes,
+    })
+    
     return render(request, 'dashboard/dashboard.html', context)
 
 
 @login_required
 def clientes(request):
-    # Cadastro via POST
+    """Lista e cadastra clientes"""
     if request.method == "POST":
         form = ClientForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Cliente cadastrado com sucesso!")
-            return redirect("clientes")
+            try:
+                form.save()
+                messages.success(request, "Cliente cadastrado com sucesso!")
+                return redirect("clientes")
+            except Exception as e:
+                messages.error(request, f"Erro ao cadastrar cliente: {str(e)}")
     else:
         form = ClientForm()
 
@@ -54,52 +139,45 @@ def clientes(request):
     elif status == "inativo":
         clients = clients.filter(is_active=False)
 
-    context = {
+    context = get_base_context(request)
+    context.update({
         "page_title": "Clientes",
-        "page_subtitle": "Gerencie sua base de clientes",
-        "form": ClientForm(),
+        "form": form,
         "clients": clients.order_by("name"),
         "total_count": total_count,
         "active_count": active_count,
         "inactive_count": inactive_count,
-    }
+    })
+    
     return render(request, "clientes/clientes.html", context)
-
-
-@login_required
-def cliente_detalhe(request, pk):
-    client = get_object_or_404(Client, pk=pk)
-    context = {
-        "client": client,
-        "page_title": f"Cliente - {client.name}",
-    }
-    return render(request, "clientes/cliente_detalhe.html", context)
 
 
 @login_required
 @require_POST
 def cliente_atualizar(request):
+    """Atualiza dados do cliente"""
     client_id = request.POST.get("client_id")
     client = get_object_or_404(Client, pk=client_id)
 
     client.name = (request.POST.get("name") or "").strip()
-    client.email = (request.POST.get("email") or "").strip()
-    client.phone = (request.POST.get("phone") or "").strip()
+    client.email = (request.POST.get("email") or "").strip() or None
+    client.phone = (request.POST.get("phone") or "").strip() or None
     client.address = (request.POST.get("address") or "").strip()
     client.notes = (request.POST.get("notes") or "").strip()
     client.is_active = bool(request.POST.get("is_active"))
 
-    client.save()
-    messages.success(request, "Cliente atualizado com sucesso!")
+    try:
+        client.save()
+        messages.success(request, "Cliente atualizado com sucesso!")
+    except Exception as e:
+        messages.error(request, f"Erro ao atualizar cliente: {str(e)}")
+    
     return redirect("clientes")
 
 
 @login_required
 def jobs(request):
-    """
-    Lista jobs + faz cadastro via modal (POST).
-    """
-    # Cadastro via POST
+    """Lista e cadastra jobs"""
     if request.method == "POST":
         form = JobForm(request.POST)
         if form.is_valid():
@@ -132,16 +210,13 @@ def jobs(request):
     andamento_count = Job.objects.filter(status="em_andamento").count()
     concluido_count = Job.objects.filter(status="concluido").count()
     pendente_count = Job.objects.filter(status="pendente").count()
-
-    # ✅ CÁLCULO DO VALOR TOTAL
     valor_total = Job.objects.aggregate(total=Sum('value'))['total'] or Decimal('0.00')
 
-    # Para usar no select do modal de edição
     clients = Client.objects.filter(is_active=True).order_by("name")
 
-    context = {
+    context = get_base_context(request)
+    context.update({
         "page_title": "Jobs",
-        "page_subtitle": "Gerencie seus projetos e serviços",
         "form": form,
         "jobs": jobs_qs,
         "total_count": total_count,
@@ -152,50 +227,47 @@ def jobs(request):
         "search_query": q,
         "current_status": status,
         "clients": clients,
-    }
+    })
+    
     return render(request, "jobs/jobs.html", context)
 
 
 @login_required
 @require_POST
 def job_atualizar(request):
+    """Atualiza job existente"""
     job_id = request.POST.get("job_id")
     job = get_object_or_404(Job, pk=job_id)
 
-    # Campos texto
     job.title = (request.POST.get("title") or "").strip()
     job.status = (request.POST.get("status") or "pendente").strip()
     job.description = (request.POST.get("description") or "").strip()
 
-    # Cliente relacional (vem um ID do select)
     client_id = request.POST.get("client_id") or request.POST.get("client")
     if client_id:
         job.client_id = int(client_id)
 
-    # Datas (YYYY-MM-DD)
-    start_date_raw = request.POST.get("start_date") or None
-    delivery_date_raw = request.POST.get("delivery_date") or None
-    job.start_date = start_date_raw or None
-    job.delivery_date = delivery_date_raw or None
+    start_date_raw = request.POST.get("start_date")
+    if start_date_raw:
+        job.start_date = start_date_raw
 
-    # Progresso
+    delivery_date_raw = request.POST.get("delivery_date")
+    if delivery_date_raw:
+        job.delivery_date = delivery_date_raw
+
     progress_raw = request.POST.get("progress") or "0"
     try:
         job.progress = int(progress_raw)
     except ValueError:
         job.progress = 0
 
-    # Valor – normalizar "1.230,50" / "230,00" / "230.00"
     value_raw = (request.POST.get("value") or "").strip()
     if value_raw:
         normalized = value_raw.replace(".", "").replace(",", ".")
         try:
             job.value = Decimal(normalized)
         except InvalidOperation:
-            messages.error(
-                request,
-                "O valor deve ser um número válido. Ex: 230,00 ou 230.00.",
-            )
+            messages.error(request, "Valor inválido.")
             return redirect("jobs")
 
     job.save()
@@ -205,9 +277,7 @@ def job_atualizar(request):
 
 @login_required
 def cobrancas(request):
-    """
-    Lista cobranças + filtros + cadastro via modal.
-    """
+    """Lista e cadastra cobranças"""
     q = request.GET.get("q", "").strip()
     status = request.GET.get("status", "todos")
 
@@ -238,7 +308,6 @@ def cobrancas(request):
     overdue_value = totals["overdue_value"] or Decimal("0")
     to_receive_value = total_value - paid_value
 
-    # cadastro (POST)
     if request.method == "POST":
         form = CobrancaForm(request.POST)
         if form.is_valid():
@@ -248,13 +317,12 @@ def cobrancas(request):
     else:
         form = CobrancaForm()
 
-    # ✅ Para os selects dos modais
     clients = Client.objects.order_by("name")
     jobs = Job.objects.select_related("client").order_by("title")
 
-    context = {
+    context = get_base_context(request)
+    context.update({
         "page_title": "Cobranças",
-        "page_subtitle": "Gerencie suas faturas e recebimentos",
         "cobrancas": cobrancas_qs,
         "search_query": q,
         "current_status": status,
@@ -268,82 +336,167 @@ def cobrancas(request):
         "overdue_value": overdue_value,
         "form": form,
         "clients": clients,
-        "jobs": jobs,  # ✅ ADICIONADO
-    }
+        "jobs": jobs,
+    })
+    
     return render(request, "cobrancas/cobrancas.html", context)
 
 
 @login_required
 @require_POST
 def cobranca_atualizar(request):
-    """
-    Atualiza cobrança via modal de edição.
-    """
+    """Atualiza cobrança existente"""
+    from datetime import datetime
+    
     cobranca_id = request.POST.get("cobranca_id")
     cobranca = get_object_or_404(Cobranca, pk=cobranca_id)
 
-    # Cliente
-    client_id = request.POST.get("client_id")
-    if client_id:
-        try:
-            cobranca.client = Client.objects.get(pk=client_id)
-        except Client.DoesNotExist:
-            messages.error(request, "Cliente inválido.")
-            return redirect("cobrancas")
+    try:
+        client_id = request.POST.get("client_id")
+        if client_id:
+            cobranca.client_id = client_id
 
-    # Job (opcional)
-    job_id = request.POST.get("job_id")
-    if job_id:
-        try:
-            cobranca.job = Job.objects.get(pk=job_id)
-        except Job.DoesNotExist:
-            cobranca.job = None
-    else:
-        cobranca.job = None
+        job_id = request.POST.get("job_id")
+        cobranca.job_id = job_id if job_id else None
 
-    # Número
-    number = request.POST.get("number")
-    if number:
-        cobranca.number = number
+        number = request.POST.get("number")
+        if number:
+            cobranca.number = number
 
-    # Valor – trata vírgula/ponto
-    raw_value = request.POST.get("value")
-    if raw_value:
-        cleaned = (
-            raw_value.replace("R$", "")
-            .replace(" ", "")
-            .replace(".", "")
-            .replace(",", ".")
-        )
-        try:
-            cobranca.value = Decimal(cleaned)
-        except (InvalidOperation, ValueError):
-            messages.error(request, "Valor inválido.")
-            return redirect("cobrancas")
+        raw_value = request.POST.get("value")
+        if raw_value:
+            cleaned = raw_value.replace("R$", "").replace(" ", "").replace(".", "").replace(",", ".")
+            try:
+                cobranca.value = Decimal(cleaned)
+            except (InvalidOperation, ValueError):
+                messages.error(request, "Valor inválido.")
+                return redirect("cobrancas")
 
-    # Datas
-    issue_date = request.POST.get("issue_date")
-    if issue_date:
-        cobranca.issue_date = issue_date
+        # Conversão correta de datas
+        issue_date = request.POST.get("issue_date")
+        if issue_date:
+            if isinstance(issue_date, str):
+                cobranca.issue_date = datetime.strptime(issue_date, '%Y-%m-%d').date()
+            else:
+                cobranca.issue_date = issue_date
 
-    due_date = request.POST.get("due_date")
-    if due_date:
-        cobranca.due_date = due_date
+        due_date = request.POST.get("due_date")
+        if due_date:
+            if isinstance(due_date, str):
+                cobranca.due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+            else:
+                cobranca.due_date = due_date
 
-    payment_date = request.POST.get("payment_date")
-    if payment_date:
-        cobranca.payment_date = payment_date
-    else:
-        cobranca.payment_date = None
+        payment_date = request.POST.get("payment_date")
+        if payment_date and payment_date.strip():
+            if isinstance(payment_date, str):
+                cobranca.payment_date = datetime.strptime(payment_date, '%Y-%m-%d').date()
+            else:
+                cobranca.payment_date = payment_date
+        else:
+            cobranca.payment_date = None
 
-    # Status
-    status = request.POST.get("status")
-    if status in ("pendente", "vencida", "paga"):
-        cobranca.status = status
+        status = request.POST.get("status")
+        if status in ("pendente", "vencida", "paga"):
+            cobranca.status = status
 
-    # Observações
-    cobranca.notes = request.POST.get("notes", "")
+        cobranca.notes = request.POST.get("notes", "")
 
-    cobranca.save()
-    messages.success(request, "Cobrança atualizada com sucesso.")
+        cobranca.save()
+        messages.success(request, "Cobrança atualizada com sucesso.")
+    except Exception as e:
+        messages.error(request, f"Erro ao atualizar cobrança: {str(e)}")
+    
     return redirect("cobrancas")
+
+
+@login_required
+def configuracoes(request):
+    """Página de configurações do sistema"""
+    config = SystemConfig.get_config()
+    
+    if request.method == 'POST':
+        form = SystemConfigForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configurações salvas com sucesso!')
+            return redirect('configuracoes')
+    else:
+        form = SystemConfigForm(instance=config)
+    
+    context = get_base_context(request)
+    context.update({
+        'page_title': 'Configurações',
+        'form': form,
+        'config': config,
+    })
+    
+    return render(request, 'configuracoes/configuracoes.html', context)
+
+
+@login_required
+def notificacoes_list(request):
+    """Lista todas as notificações do usuário"""
+    notifications = Notification.objects.filter(user=request.user)
+    
+    context = get_base_context(request)
+    context.update({
+        'page_title': 'Notificações',
+        'notifications': notifications,
+    })
+    
+    return render(request, 'notificacoes/list.html', context)
+
+
+@login_required
+@require_POST
+def notificacao_mark_all_read(request):
+    """Marca todas as notificações como lidas"""
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    messages.success(request, 'Todas as notificações foram marcadas como lidas.')
+    
+    next_url = request.POST.get('next', 'dashboard')
+    return redirect(next_url)
+
+
+@staff_member_required
+def usuarios(request):
+    """Gerenciamento de usuários (apenas para staff)"""
+    if request.method == 'POST':
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Usuário criado com sucesso!')
+            return redirect('usuarios')
+    else:
+        form = UserCreateForm()
+    
+    users = User.objects.all().order_by('-date_joined')
+    
+    context = get_base_context(request)
+    context.update({
+        'page_title': 'Usuários',
+        'users': users,
+        'form': form,
+    })
+    
+    return render(request, 'usuarios/usuarios.html', context)
+
+
+@staff_member_required
+@require_POST
+def usuario_toggle_active(request, user_id):
+    """Ativa/desativa um usuário"""
+    user = get_object_or_404(User, pk=user_id)
+    
+    if user == request.user:
+        messages.error(request, 'Você não pode desativar sua própria conta.')
+        return redirect('usuarios')
+    
+    user.is_active = not user.is_active
+    user.save()
+    
+    status = 'ativado' if user.is_active else 'desativado'
+    messages.success(request, f'Usuário {user.username} foi {status} com sucesso.')
+    
+    return redirect('usuarios')

@@ -1,0 +1,245 @@
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Usuários{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page clients-page">
+
+  <!-- Título + botão que abre modal de cadastro -->
+  <div class="top-row">
+    <div class="top-row-main">
+      <h1>Usuários</h1>
+      <p>Gerencie os usuários do sistema</p>
+    </div>
+    <div class="top-row-actions">
+      <button id="btn-open-create-modal" type="button" class="btn btn-primary">
+        <span class="icon">＋</span>
+        <span>Novo Usuário</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="clients-layout clients-layout-single">
+
+    <!-- CARD: LISTA DE USUÁRIOS -->
+    <section class="card clients-filters">
+      <div class="card-header">
+        <div class="card-title">Usuários cadastrados</div>
+        <p class="card-subtitle">
+          Total de {{ users.count }} usuário{{ users.count|pluralize }} no sistema.
+        </p>
+      </div>
+
+      <div class="card-content">
+        <!-- LISTA DE USUÁRIOS -->
+        <div class="clients-inline-wrapper">
+          {% if users %}
+          <ul class="clients-inline-list">
+            {% for u in users %}
+            <li class="client-inline-item">
+              <div class="client-inline-main">
+                <div class="client-avatar">
+                  {% if u.is_superuser %}
+                  <span>👑</span>
+                  {% elif u.is_staff %}
+                  <span>⭐</span>
+                  {% else %}
+                  <span>👤</span>
+                  {% endif %}
+                </div>
+                <div class="client-inline-text">
+                  <span class="client-inline-name">
+                    {{ u.first_name }} {{ u.last_name }}
+                    {% if u.is_superuser %}<small style="color: #f59e0b;">(Admin)</small>{% endif %}
+                  </span>
+                  <span class="client-inline-sub">
+                    @{{ u.username }} • {{ u.email }}
+                  </span>
+                  <span class="client-inline-sub">
+                    Cadastrado em {{ u.date_joined|date:"d/m/Y" }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="client-inline-status">
+                {% if u.is_active %}
+                <span class="status-badge status-active">Ativo</span>
+                {% else %}
+                <span class="status-badge status-inactive">Inativo</span>
+                {% endif %}
+
+                <div class="client-inline-actions">
+                  {% if u != user %}
+                  <form method="post" action="{% url 'usuario_toggle_active' u.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-sm" 
+                            onclick="return confirm('{% if u.is_active %}Desativar{% else %}Ativar{% endif %} usuário {{ u.username }}?')">
+                      {% if u.is_active %}Desativar{% else %}Ativar{% endif %}
+                    </button>
+                  </form>
+                  {% else %}
+                  <span class="btn btn-outline-sm" style="opacity: 0.5; cursor: not-allowed;">Você</span>
+                  {% endif %}
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="clients-inline-empty">
+            <p>Nenhum usuário cadastrado ainda.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- MODAL: CADASTRAR NOVO USUÁRIO -->
+<div id="modal-create-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Cadastrar novo usuário</h2>
+      <button type="button" class="modal-close" data-close-modal="create">&times;</button>
+    </div>
+    <div class="modal-body">
+      {% if form.errors %}
+      <div class="form-errors">
+        <p>Verifique os campos destacados abaixo.</p>
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            <p style="color: #ef4444;">• {{ error }}</p>
+          {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" class="client-form">
+        {% csrf_token %}
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Nome de usuário</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <small class="form-error">{{ form.username.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <small class="form-error">{{ form.email.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.first_name.id_for_label }}">Nome</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+              <small class="form-error">{{ form.first_name.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.last_name.id_for_label }}">Sobrenome</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+              <small class="form-error">{{ form.last_name.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.password1.id_for_label }}">Senha</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+              <small class="form-error">{{ form.password1.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.password2.id_for_label }}">Confirmar Senha</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+              <small class="form-error">{{ form.password2.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-group-full form-group-inline">
+            <label class="checkbox-inline">
+              {{ form.is_staff }}
+              <span>Acesso administrativo (Staff)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Criar Usuário</button>
+          <button type="button" class="btn btn-outline" data-close-modal="create">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS: Modais -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalCreate = document.getElementById('modal-create-overlay');
+    const btnOpenCreate = document.getElementById('btn-open-create-modal');
+
+    function openModal(modal) {
+      if (modal) modal.classList.add('is-open');
+    }
+
+    function closeModal(modal) {
+      if (modal) modal.classList.remove('is-open');
+    }
+
+    if (btnOpenCreate && modalCreate) {
+      btnOpenCreate.addEventListener('click', function () {
+        openModal(modalCreate);
+      });
+    }
+
+    document.querySelectorAll('[data-close-modal="create"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalCreate);
+      });
+    });
+
+    // Fechar clicando fora
+    if (modalCreate) {
+      modalCreate.addEventListener('click', function (e) {
+        if (e.target === modalCreate) {
+          closeModal(modalCreate);
+        }
+      });
+    }
+
+    // ESC fecha
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeModal(modalCreate);
+      }
+    });
+
+    // Se der erro de validação, abre o modal automaticamente
+    var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
+    if (hasErrors && modalCreate) {
+      openModal(modalCreate);
+    }
+  });
+</script>
+{% endblock %}

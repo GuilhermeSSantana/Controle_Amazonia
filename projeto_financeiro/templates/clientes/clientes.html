@@ -1,485 +1,464 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+{% extends "components/layout.html" %}
+{% load static %}
 
-<head>
-  <meta charset="UTF-8">
-  <title>Clientes - Financeiro Amazonas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  {% load static %}
+{% block page_title %}Clientes{% endblock %}
 
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+{% block extra_head %}
   <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
-</head>
+  <style>
+    .form-error {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+    .form-errors {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .form-errors p {
+      color: #991b1b;
+      margin: 4px 0;
+      font-size: 14px;
+    }
+    .input.error, .select.error, .textarea.error {
+      border-color: #ef4444;
+    }
+  </style>
+{% endblock %}
 
-<body>
-  <div class="app-shell">
+{% block content %}
+<div class="page clients-page">
 
-    <!-- SIDEBAR -->
-    <aside class="app-sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo-wrap">
-          <div class="sidebar-logo-icon">
-            <span class="icon">🏗️</span>
-          </div>
-          <div class="sidebar-logo-text">
-            <div class="sidebar-logo-title">Amazônia</div>
-            <div class="sidebar-logo-subtitle">Engenharia</div>
-          </div>
-        </div>
+  <!-- Título + botão que abre modal de cadastro -->
+  <div class="top-row">
+    <div class="top-row-main">
+      <h1>Clientes</h1>
+      <p>Gerencie sua base de clientes</p>
+    </div>
+    <div class="top-row-actions">
+      <button id="btn-open-create-modal" type="button" class="btn btn-primary">
+        <span class="icon">＋</span>
+        <span>Novo Cliente</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL: card de filtros + lista -->
+  <div class="clients-layout clients-layout-single">
+
+    <!-- CARD: FILTROS + LISTA -->
+    <section class="card clients-filters">
+      <div class="card-header">
+        <div class="card-title">Buscar e filtrar clientes</div>
+        <p class="card-subtitle">
+          Use a busca e os filtros para localizar clientes rapidamente.
+        </p>
       </div>
 
-      <nav class="sidebar-nav">
-        <a href="/dashboard/" class="nav-link">
-          <span class="icon">🏠</span>
-          <span>Dashboard</span>
-        </a>
+      <div class="card-content">
 
-        <a href="/clientes/" class="nav-link is-active">
-          <span class="icon">👥</span>
-          <span>Clientes</span>
-        </a>
-
-        <a href="/jobs/" class="nav-link">
-          <span class="icon">💼</span>
-          <span>Jobs</span>
-        </a>
-
-        <a href="/cobrancas/" class="nav-link">
-          <span class="icon">💰</span>
-          <span>Cobranças</span>
-        </a>
-
-        <a href="/relatorios/" class="nav-link">
-          <span class="icon">📊</span>
-          <span>Relatórios</span>
-        </a>
-
-        <a href="/configuracoes/" class="nav-link">
-          <span class="icon">⚙️</span>
-          <span>Configurações</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="sidebar-footer-box">
-          <p class="sidebar-footer-title">Sistema de Cobrança</p>
-          <p class="sidebar-footer-subtitle">Versão 1.0.0</p>
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN -->
-    <div class="app-main">
-
-      <!-- HEADER -->
-      <header class="app-header">
-        <div class="header-left">
-          <h1 class="header-title">Clientes</h1>
-          <p class="header-subtitle">Gerencie sua base de clientes</p>
-        </div>
-
-        <div class="header-right">
-          <button class="btn-header icon-only" type="button">
-            <span class="icon">🔔</span>
-            <span class="badge-dot"></span>
-          </button>
-
-          <div class="user-chip">
-            <span class="icon">👤</span>
-            <span class="user-name">{{ request.user.username }}</span>
+        <!-- FORM DE FILTRO -->
+        <form method="get" class="filters-form">
+          <div class="filters-search">
+            <label for="q">Buscar</label>
+            <div class="filters-search-input">
+              <span class="icon">🔍</span>
+              <input
+                type="text"
+                id="q"
+                name="q"
+                placeholder="Nome, documento ou email..."
+                value="{{ request.GET.q|default_if_none:'' }}"
+              >
+            </div>
           </div>
 
-          <form action="/logout/" method="post" style="margin:0;">
-            {% csrf_token %}
-            <button class="btn-header icon-only" type="submit" title="Sair">
-              <span class="icon">⏻</span>
+          <div class="filters-status">
+            <span class="filters-status-label">Status</span>
+            {% with status=request.GET.status|default:"todos" %}
+            <button
+              type="submit"
+              name="status"
+              value="todos"
+              class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}"
+            >
+              Todos ({{ total_count }})
             </button>
-          </form>
-        </div>
-      </header>
-
-      <!-- CONTEÚDO -->
-      <main class="app-content">
-        <div class="page clients-page">
-
-          <!-- Título + botão que abre modal de cadastro -->
-          <div class="top-row">
-            <div class="top-row-main">
-              <h1>Clientes</h1>
-              <p>Gerencie sua base de clientes</p>
-            </div>
-            <div class="top-row-actions">
-              <button id="btn-open-create-modal" type="button" class="btn btn-primary">
-                <span class="icon">＋</span>
-                <span>Novo Cliente</span>
-              </button>
-            </div>
+            <button
+              type="submit"
+              name="status"
+              value="ativo"
+              class="btn btn-chip {% if status == 'ativo' %}is-active{% endif %}"
+            >
+              Ativos ({{ active_count }})
+            </button>
+            <button
+              type="submit"
+              name="status"
+              value="inativo"
+              class="btn btn-chip {% if status == 'inativo' %}is-active{% endif %}"
+            >
+              Inativos ({{ inactive_count }})
+            </button>
+            {% endwith %}
           </div>
+        </form>
 
-          <!-- LAYOUT PRINCIPAL: card de filtros + lista -->
-          <div class="clients-layout clients-layout-single">
-
-            <!-- CARD: FILTROS + LISTA -->
-            <section class="card clients-filters">
-              <div class="card-header">
-                <div class="card-title">Buscar e filtrar clientes</div>
-                <p class="card-subtitle">Use a busca e os filtros para localizar clientes rapidamente.</p>
-              </div>
-
-              <div class="card-content">
-
-                <!-- FORM DE FILTRO -->
-                <form method="get" class="filters-form">
-                  <div class="filters-search">
-                    <label for="q">Buscar</label>
-                    <div class="filters-search-input">
-                      <span class="icon">🔍</span>
-                      <input type="text" id="q" name="q" placeholder="Nome, documento ou email..."
-                        value="{{ request.GET.q|default_if_none:'' }}">
-                    </div>
-                  </div>
-
-                  <div class="filters-status">
-                    <span class="filters-status-label">Status</span>
-                    {% with status=request.GET.status|default:"todos" %}
-                    <button type="submit" name="status" value="todos"
-                      class="btn btn-chip {% if status == 'todos' %}is-active{% endif %}">
-                      Todos ({{ total_count }})
-                    </button>
-                    <button type="submit" name="status" value="ativo"
-                      class="btn btn-chip {% if status == 'ativo' %}is-active{% endif %}">
-                      Ativos ({{ active_count }})
-                    </button>
-                    <button type="submit" name="status" value="inativo"
-                      class="btn btn-chip {% if status == 'inativo' %}is-active{% endif %}">
-                      Inativos ({{ inactive_count }})
-                    </button>
-                    {% endwith %}
-                  </div>
-                </form>
-
-                <!-- LISTA DE CLIENTES DENTRO DO CARD -->
-                <div class="clients-inline-wrapper">
-                  {% if clients %}
-                  <ul class="clients-inline-list">
-                    {% for client in clients %}
-                    <li class="client-inline-item">
-                      <div class="client-inline-main">
-                        <div class="client-avatar">
-                          {% if client.type == 'CNPJ' %}
-                          <span>🏢</span>
-                          {% else %}
-                          <span>👤</span>
-                          {% endif %}
-                        </div>
-                        <div class="client-inline-text">
-                          <span class="client-inline-name">{{ client.name }}</span>
-                          <span class="client-inline-sub">
-                            {{ client.type }} • {{ client.document }}
-                          </span>
-                          {% if client.email %}
-                          <span class="client-inline-sub">{{ client.email }}</span>
-                          {% endif %}
-                        </div>
-                      </div>
-
-                      <div class="client-inline-status">
-                        {% if client.is_active %}
-                        <span class="status-badge status-active">Ativo</span>
-                        {% else %}
-                        <span class="status-badge status-inactive">Inativo</span>
-                        {% endif %}
-
-                        <div class="client-inline-actions">
-                          <button type="button" class="btn btn-outline-sm js-open-detail" data-id="{{ client.id }}"
-                            data-name="{{ client.name }}" data-type="{{ client.type }}"
-                            data-document="{{ client.document }}" data-email="{{ client.email|default_if_none:'' }}"
-                            data-phone="{{ client.phone|default_if_none:'' }}"
-                            data-address="{{ client.address|default_if_none:'' }}"
-                            data-notes="{{ client.notes|default_if_none:'' }}"
-                            data-is-active="{% if client.is_active %}true{% else %}false{% endif %}">
-                            Detalhes
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                    {% endfor %}
-                  </ul>
+        <!-- LISTA DE CLIENTES DENTRO DO CARD -->
+        <div class="clients-inline-wrapper">
+          {% if clients %}
+          <ul class="clients-inline-list">
+            {% for client in clients %}
+            <li class="client-inline-item">
+              <div class="client-inline-main">
+                <div class="client-avatar">
+                  {% if client.type == 'CNPJ' %}
+                  <span>🏢</span>
                   {% else %}
-                  <div class="clients-inline-empty">
-                    <p>
-                      {% if request.GET.q %}
-                      Nenhum cliente corresponde à busca.
-                      {% else %}
-                      Nenhum cliente cadastrado ainda.
-                      {% endif %}
-                    </p>
-                  </div>
+                  <span>👤</span>
+                  {% endif %}
+                </div>
+                <div class="client-inline-text">
+                  <span class="client-inline-name">{{ client.name }}</span>
+                  <span class="client-inline-sub">
+                    {{ client.type }} • {{ client.document }}
+                  </span>
+                  {% if client.email %}
+                  <span class="client-inline-sub">{{ client.email }}</span>
                   {% endif %}
                 </div>
               </div>
-            </section>
 
+              <div class="client-inline-status">
+                {% if client.is_active %}
+                <span class="status-badge status-active">Ativo</span>
+                {% else %}
+                <span class="status-badge status-inactive">Inativo</span>
+                {% endif %}
+
+                <div class="client-inline-actions">
+                  <button
+                    type="button"
+                    class="btn btn-outline-sm js-open-detail"
+                    data-id="{{ client.id }}"
+                    data-name="{{ client.name }}"
+                    data-type="{{ client.type }}"
+                    data-document="{{ client.document }}"
+                    data-email="{{ client.email|default_if_none:'' }}"
+                    data-phone="{{ client.phone|default_if_none:'' }}"
+                    data-address="{{ client.address|default_if_none:'' }}"
+                    data-notes="{{ client.notes|default_if_none:'' }}"
+                    data-is-active="{% if client.is_active %}true{% else %}false{% endif %}"
+                  >
+                    Detalhes
+                  </button>
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="clients-inline-empty">
+            <p>
+              {% if request.GET.q %}
+              Nenhum cliente corresponde à busca.
+              {% else %}
+              Nenhum cliente cadastrado ainda.
+              {% endif %}
+            </p>
           </div>
-
+          {% endif %}
         </div>
-      </main>
+      </div>
+    </section>
 
-    </div>
   </div>
+</div>
 
-  <!-- MODAL: CADASTRAR NOVO CLIENTE -->
-  <div id="modal-create-overlay" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Cadastrar novo cliente</h2>
-        <button type="button" class="modal-close" data-close-modal="create">&times;</button>
-      </div>
-      <div class="modal-body">
-        {% if form.errors %}
-        <div class="form-errors">
-          <p>Verifique os campos destacados abaixo.</p>
-        </div>
-        {% endif %}
-
-        <form method="post" class="client-form">
-          {% csrf_token %}
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="id_name">Nome</label>
-              {{ form.name }}
-            </div>
-
-            <div class="form-group">
-              <label for="id_type">Tipo de Documento</label>
-              {{ form.type }}
-            </div>
-
-            <div class="form-group">
-              <label for="id_document">Documento</label>
-              {{ form.document }}
-            </div>
-
-            <div class="form-group">
-              <label for="id_email">Email</label>
-              {{ form.email }}
-            </div>
-
-            <div class="form-group">
-              <label for="id_phone">Telefone</label>
-              {{ form.phone }}
-            </div>
-
-            <div class="form-group form-group-full">
-              <label for="id_address">Endereço</label>
-              {{ form.address }}
-            </div>
-
-            <div class="form-group form-group-full">
-              <label for="id_notes">Observações</label>
-              {{ form.notes }}
-            </div>
-
-            <div class="form-group form-group-full form-group-inline">
-              <label class="checkbox-inline">
-                {{ form.is_active }}
-                <span>Cliente ativo</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Salvar Cliente</button>
-            <button type="button" class="btn btn-outline" data-close-modal="create">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
+<!-- MODAL: CADASTRAR NOVO CLIENTE -->
+<div id="modal-create-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Cadastrar novo cliente</h2>
+      <button type="button" class="modal-close" data-close-modal="create">&times;</button>
     </div>
-  </div>
-
-  <!-- MODAL: DETALHES / EDIÇÃO RÁPIDA DO CLIENTE -->
-  <div id="modal-detail-overlay" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Detalhes do Cliente</h2>
-        <button type="button" class="modal-close" data-close-modal="detail">&times;</button>
+    <div class="modal-body">
+      {% if form.errors %}
+      <div class="form-errors">
+        <p><strong>⚠️ Erro ao cadastrar cliente:</strong></p>
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            <p>• {% if field == '__all__' %}{{ error }}{% else %}{{ field|title }}: {{ error }}{% endif %}</p>
+          {% endfor %}
+        {% endfor %}
       </div>
+      {% endif %}
 
-      <form id="detail-edit-form" class="modal-body detail-form" method="post" action="{% url 'cliente_atualizar' %}">
+      <form method="post" class="client-form">
         {% csrf_token %}
-        <input type="hidden" id="detail-id" name="client_id">
 
-        <!-- ✅ NOVO CAMPO: NOME -->
-        <div class="detail-row">
-          <label for="detail-name-input">Nome</label>
-          <input type="text" id="detail-name-input" name="name" placeholder="Nome do cliente">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="id_name">Nome</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <small class="form-error">{{ form.name.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_type">Tipo de Documento</label>
+            {{ form.type }}
+            {% if form.type.errors %}
+              <small class="form-error">{{ form.type.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_document">Documento</label>
+            {{ form.document }}
+            {% if form.document.errors %}
+              <small class="form-error">{{ form.document.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <small class="form-error">{{ form.email.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_phone">Telefone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <small class="form-error">{{ form.phone.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="id_address">Endereço</label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <small class="form-error">{{ form.address.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-group-full">
+            <label for="id_notes">Observações</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+              <small class="form-error">{{ form.notes.errors.0 }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-group-full form-group-inline">
+            <label class="checkbox-inline">
+              {{ form.is_active }}
+              <span>Cliente ativo</span>
+            </label>
+          </div>
         </div>
 
-        <div class="detail-row">
-          <label for="detail-document">Documento</label>
-          <input type="text" id="detail-document" name="document" readonly>
-        </div>
-
-        <div class="detail-row">
-          <label for="detail-email">Email</label>
-          <input type="email" id="detail-email" name="email">
-        </div>
-
-        <div class="detail-row">
-          <label for="detail-phone">Telefone</label>
-          <input type="text" id="detail-phone" name="phone">
-        </div>
-
-        <div class="detail-row">
-          <label for="detail-address">Endereço</label>
-          <input type="text" id="detail-address" name="address">
-        </div>
-
-        <div class="detail-row">
-          <label for="detail-notes">Observações</label>
-          <textarea id="detail-notes" name="notes" rows="3"></textarea>
-        </div>
-
-        <div class="detail-row detail-row-inline">
-          <label class="checkbox-inline">
-            <input type="checkbox" id="detail-is-active" name="is_active">
-            <span>Cliente ativo</span>
-          </label>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline" data-close-modal="detail">
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Salvar Cliente</button>
+          <button type="button" class="btn btn-outline" data-close-modal="create">
             Cancelar
-          </button>
-          <button type="submit" class="btn-primary">
-            Salvar alterações
           </button>
         </div>
       </form>
     </div>
   </div>
+</div>
 
+<!-- MODAL: DETALHES / EDIÇÃO RÁPIDA DO CLIENTE -->
+<div id="modal-detail-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Detalhes do Cliente</h2>
+      <button type="button" class="modal-close" data-close-modal="detail">&times;</button>
+    </div>
 
-  <!-- JS: Máscaras + Modais + Detalhes -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // ===== Máscaras =====
-      try {
-        const docInput = document.getElementById('id_document');
-        const typeSelect = document.getElementById('id_type');
-        const phoneInput = document.getElementById('id_phone');
+    <form
+      id="detail-edit-form"
+      class="modal-body detail-form"
+      method="post"
+      action="{% url 'cliente_atualizar' %}"
+    >
+      {% csrf_token %}
+      <input type="hidden" id="detail-id" name="client_id">
 
-        function onlyDigits(value) {
-          return (value || '').replace(/\D/g, '');
-        }
+      <div class="detail-row">
+        <label for="detail-name-input">Nome</label>
+        <input type="text" id="detail-name-input" name="name" placeholder="Nome do cliente">
+      </div>
 
-        function formatCPF(v) {
-          v = onlyDigits(v).slice(0, 11);
-          if (v.length <= 3) return v;
-          if (v.length <= 6) return v.replace(/(\d{3})(\d+)/, '$1.$2');
-          if (v.length <= 9) return v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
-          return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-        }
+      <div class="detail-row">
+        <label for="detail-document">Documento</label>
+        <input type="text" id="detail-document" name="document" readonly>
+      </div>
 
-        function formatCNPJ(v) {
-          v = onlyDigits(v).slice(0, 14);
-          if (v.length <= 2) return v;
-          if (v.length <= 5) return v.replace(/(\d{2})(\d+)/, '$1.$2');
-          if (v.length <= 8) return v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
-          if (v.length <= 12) return v.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
-          return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
-        }
+      <div class="detail-row">
+        <label for="detail-email">Email</label>
+        <input type="email" id="detail-email" name="email">
+      </div>
 
-        function formatPhone(v) {
-          v = onlyDigits(v).slice(0, 11);
-          if (v.length <= 2) return '(' + v;
-          if (v.length <= 6) return v.replace(/(\d{2})(\d+)/, '($1) $2');
-          if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
-          return v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
-        }
+      <div class="detail-row">
+        <label for="detail-phone">Telefone</label>
+        <input type="text" id="detail-phone" name="phone">
+      </div>
 
-        function applyDocMask() {
-          if (!docInput || !typeSelect) return;
-          const type = typeSelect.value;
-          let value = docInput.value || '';
-          docInput.value = type === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
-        }
+      <div class="detail-row">
+        <label for="detail-address">Endereço</label>
+        <input type="text" id="detail-address" name="address">
+      </div>
 
-        if (docInput && typeSelect) {
-          docInput.addEventListener('input', applyDocMask);
-          typeSelect.addEventListener('change', applyDocMask);
-          applyDocMask();
-        }
+      <div class="detail-row">
+        <label for="detail-notes">Observações</label>
+        <textarea id="detail-notes" name="notes" rows="3"></textarea>
+      </div>
 
-        if (phoneInput) {
-          phoneInput.addEventListener('input', function () {
-            phoneInput.value = formatPhone(phoneInput.value || '');
-          });
-        }
-      } catch (e) {
-        console.warn('Erro nas máscaras (ignorado):', e);
+      <div class="detail-row detail-row-inline">
+        <label class="checkbox-inline">
+          <input type="checkbox" id="detail-is-active" name="is_active">
+          <span>Cliente ativo</span>
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal="detail">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary">
+          Salvar alterações
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- JS: Máscaras + Modais + Detalhes -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // ===== MÁSCARAS =====
+    try {
+      const docInput = document.getElementById('id_document');
+      const typeSelect = document.getElementById('id_type');
+      const phoneInput = document.getElementById('id_phone');
+
+      function onlyDigits(value) {
+        return (value || '').replace(/\D/g, '');
       }
 
-      // ===== Modais =====
-      const modalCreate = document.getElementById('modal-create-overlay');
-      const modalDetail = document.getElementById('modal-detail-overlay');
-      const btnOpenCreate = document.getElementById('btn-open-create-modal');
-
-      function openModal(modal) {
-        if (modal) modal.classList.add('is-open');
+      function formatCPF(v) {
+        v = onlyDigits(v).slice(0, 11);
+        if (v.length <= 3) return v;
+        if (v.length <= 6) return v.replace(/(\d{3})(\d+)/, '$1.$2');
+        if (v.length <= 9) return v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+        return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
       }
 
-      function closeModal(modal) {
-        if (modal) modal.classList.remove('is-open');
+      function formatCNPJ(v) {
+        v = onlyDigits(v).slice(0, 14);
+        if (v.length <= 2) return v;
+        if (v.length <= 5) return v.replace(/(\d{2})(\d+)/, '$1.$2');
+        if (v.length <= 8) return v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+        if (v.length <= 12) return v.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+        return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
       }
 
-      if (btnOpenCreate && modalCreate) {
-        btnOpenCreate.addEventListener('click', function () {
-          openModal(modalCreate);
-        });
+      function formatPhone(v) {
+        v = onlyDigits(v).slice(0, 11);
+        if (v.length <= 2) return '(' + v;
+        if (v.length <= 6) return v.replace(/(\d{2})(\d+)/, '($1) $2');
+        if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+        return v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
       }
 
-      document.querySelectorAll('[data-close-modal="create"]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          closeModal(modalCreate);
-        });
-      });
+      function applyDocMask() {
+        if (!docInput || !typeSelect) return;
+        const type = typeSelect.value;
+        let value = docInput.value || '';
+        docInput.value = type === 'CNPJ' ? formatCNPJ(value) : formatCPF(value);
+      }
 
-      document.querySelectorAll('[data-close-modal="detail"]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          closeModal(modalDetail);
-        });
-      });
+      if (docInput && typeSelect) {
+        docInput.addEventListener('input', applyDocMask);
+        typeSelect.addEventListener('change', applyDocMask);
+        applyDocMask();
+      }
 
-      // Fechar clicando fora
-      [modalCreate, modalDetail].forEach(function (overlay) {
-        if (!overlay) return;
-        overlay.addEventListener('click', function (e) {
-          if (e.target === overlay) {
-            overlay.classList.remove('is-open');
-          }
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+          phoneInput.value = formatPhone(phoneInput.value || '');
         });
-      });
+      }
+    } catch (e) {
+      console.warn('Erro nas máscaras (ignorado):', e);
+    }
 
-      // ESC fecha
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-          closeModal(modalCreate);
-          closeModal(modalDetail);
+    // ===== MODAIS =====
+    const modalCreate = document.getElementById('modal-create-overlay');
+    const modalDetail = document.getElementById('modal-detail-overlay');
+    const btnOpenCreate = document.getElementById('btn-open-create-modal');
+
+    function openModal(modal) {
+      if (modal) modal.classList.add('is-open');
+    }
+
+    function closeModal(modal) {
+      if (modal) modal.classList.remove('is-open');
+    }
+
+    if (btnOpenCreate && modalCreate) {
+      btnOpenCreate.addEventListener('click', function () {
+        openModal(modalCreate);
+      });
+    }
+
+    document.querySelectorAll('[data-close-modal="create"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalCreate);
+      });
+    });
+
+    document.querySelectorAll('[data-close-modal="detail"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        closeModal(modalDetail);
+      });
+    });
+
+    // Fechar clicando fora
+    [modalCreate, modalDetail].forEach(function (overlay) {
+      if (!overlay) return;
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          overlay.classList.remove('is-open');
         }
       });
+    });
 
-      // Se der erro de validação no form de criação, abre o modal automaticamente
-      var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
+    // ESC fecha
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeModal(modalCreate);
+        closeModal(modalDetail);
+      }
+    });
+
+    // Se der erro de validação no form de criação, abre o modal automaticamente
+    var hasErrors = {% if form.errors %}true{% else %}false{% endif %};
     if (hasErrors && modalCreate) {
       openModal(modalCreate);
     }
 
-    // ===== Detalhes do cliente (preenche modal com inputs) =====
+    // ===== DETALHES DO CLIENTE (preenche modal com inputs) =====
     const detailId = document.getElementById('detail-id');
     const detailNameInput = document.getElementById('detail-name-input');
     const detailDocument = document.getElementById('detail-document');
@@ -494,7 +473,11 @@
 
         if (detailId) detailId.value = this.dataset.id || '';
         if (detailNameInput) detailNameInput.value = this.dataset.name || '';
-        if (detailDocument) detailDocument.value = (this.dataset.type || '') + ' • ' + (this.dataset.document || '');
+        if (detailDocument) {
+          const type = this.dataset.type || '';
+          const doc = this.dataset.document || '';
+          detailDocument.value = (type ? type + ' • ' : '') + doc;
+        }
         if (detailEmail) detailEmail.value = this.dataset.email || '';
         if (detailPhone) detailPhone.value = this.dataset.phone || '';
         if (detailAddress) detailAddress.value = this.dataset.address || '';
@@ -504,24 +487,6 @@
         openModal(modalDetail);
       });
     });
-
-    // Botão "Salvar alterações" (por enquanto só mostra no console)
-    const detailSaveBtn = document.getElementById('detail-save-btn');
-    if (detailSaveBtn) {
-      detailSaveBtn.addEventListener('click', function () {
-        console.log('Dados que poderiam ser enviados para update:', {
-          id: detailId ? detailId.value : null,
-          email: detailEmail ? detailEmail.value : null,
-          phone: detailPhone ? detailPhone.value : null,
-          address: detailAddress ? detailAddress.value : null,
-          notes: detailNotes ? detailNotes.value : null,
-          is_active: detailIsActive ? detailIsActive.checked : null,
-        });
-        alert('Edição pronta visualmente. Depois conectamos isso à view de update no Django. 😉');
-      });
-    }
   });
-  </script>
-</body>
-
-</html>
+</script>
+{% endblock %}

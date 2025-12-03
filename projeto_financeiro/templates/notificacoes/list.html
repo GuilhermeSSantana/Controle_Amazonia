@@ -1,0 +1,143 @@
+{% extends "components/layout.html" %}
+{% load static %}
+
+{% block page_title %}Notificações{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+  <style>
+    .notification-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #e5e7eb;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .notification-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .notification-card.unread {
+      background: #eff6ff;
+      border-left-color: #3b82f6;
+    }
+    
+    .notification-card.cobranca_vencida {
+      border-left-color: #ef4444;
+    }
+    
+    .notification-card.cobranca_vencendo {
+      border-left-color: #f59e0b;
+    }
+    
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .notification-type-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .notification-type-badge.cobranca_vencendo {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .notification-type-badge.cobranca_vencida {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .notification-time {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      color: #111827;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    
+    .notification-message {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .notifications-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #9ca3af;
+    }
+    
+    .notifications-empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="top-row">
+    <div class="top-row-main">
+      <h1>📬 Notificações</h1>
+      <p>Todas as suas notificações do sistema</p>
+    </div>
+    <div class="top-row-actions">
+      {% if notifications %}
+      <form method="post" action="{% url 'notificacao_mark_all_read' %}" style="display: inline;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'notificacoes_list' %}">
+        <button type="submit" class="btn btn-outline">
+          <span class="icon">✓</span>
+          <span>Marcar todas como lidas</span>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-content">
+      {% if notifications %}
+        {% for notification in notifications %}
+        <div class="notification-card {% if not notification.is_read %}unread{% endif %} {{ notification.type }}"
+             onclick="window.location.href='{{ notification.link|default:'#' }}'">
+          <div class="notification-header">
+            <span class="notification-type-badge {{ notification.type }}">
+              {{ notification.get_type_display }}
+            </span>
+            <span class="notification-time">
+              {{ notification.created_at|timesince }} atrás
+            </span>
+          </div>
+          <div class="notification-title">{{ notification.title }}</div>
+          <div class="notification-message">{{ notification.message }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="notifications-empty">
+        <div class="notifications-empty-icon">📭</div>
+        <h3>Nenhuma notificação</h3>
+        <p>Você está em dia! Não há notificações no momento.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

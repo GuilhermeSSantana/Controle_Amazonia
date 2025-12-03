@@ -1,12 +1,13 @@
 from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from app_financeiro.views import dashboard
 from app_financeiro import views
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
 
+    # Autenticação
     path('', auth_views.LoginView.as_view(
         template_name='login/login.html'
     ), name='login'),
@@ -15,32 +16,33 @@ urlpatterns = [
         template_name='login/login.html'
     ), name='login'),
 
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(
+        next_page='login'
+    ), name='logout'),
 
-    path('dashboard/', dashboard, name='dashboard'),
+    # Dashboard
+    path('dashboard/', views.dashboard, name='dashboard'),
 
-    # CLIENTES – listagem + cadastro
-    path("clientes/", views.clientes, name="clientes"),
+    # Clientes
+    path('clientes/', views.clientes, name='clientes'),
+    path('clientes/atualizar/', views.cliente_atualizar, name='cliente_atualizar'),
 
-    # CLIENTES – atualização via modal de detalhes
-    path("clientes/atualizar/", views.cliente_atualizar, name="cliente_atualizar"),
+    # Jobs
+    path('jobs/', views.jobs, name='jobs'),
+    path('jobs/atualizar/', views.job_atualizar, name='job_atualizar'),
 
-    # JOBS – listagem + cadastro
-    path("jobs/", views.jobs, name="jobs"),
+    # Cobranças
+    path('cobrancas/', views.cobrancas, name='cobrancas'),
+    path('cobrancas/atualizar/', views.cobranca_atualizar, name='cobranca_atualizar'),
 
-    # JOBS – detalhes
-    # path("jobs/<int:pk>/", views.job_detalhe, name="job_detalhe"),
+    # Configurações
+    path('configuracoes/', views.configuracoes, name='configuracoes'),
 
-    # JOBS – atualização via modal de detalhes
-    path("jobs/atualizar/", views.job_atualizar, name="job_atualizar"),
+    # Notificações
+    path('notificacoes/', views.notificacoes_list, name='notificacoes_list'),
+    path('notificacoes/marcar-lidas/', views.notificacao_mark_all_read, name='notificacao_mark_all_read'),
 
-    # COBRANÇAS – listagem + cadastro
-    path("cobrancas/", views.cobrancas, name="cobrancas"),
-
-    # COBRANÇAS – atualização via modal de detalhes
-    path("cobrancas/atualizar/", views.cobranca_atualizar, name="cobranca_atualizar"),
-
+    # Usuários (apenas para staff)
+    path('usuarios/', views.usuarios, name='usuarios'),
+    path('usuarios/<int:user_id>/toggle-active/', views.usuario_toggle_active, name='usuario_toggle_active'),
 ]
-
-
-
